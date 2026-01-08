@@ -1,0 +1,12 @@
+{
+    "domain": "ha_volkswagen",
+    "name": "HA Volkswagen",
+    "codeowners": [
+        "@git@github.com:marksieczkowski/ha-volkswagen.git"
+    ],
+    "config_flow": false,
+    "documentation": "https://github.com/git@github.com:marksieczkowski/ha-volkswagen.git/ha-volkswagen",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/git@github.com:marksieczkowski/ha-volkswagen.git/ha-volkswagen/issues",
+    "version": "0.0.1"
+}
