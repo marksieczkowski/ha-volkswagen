@@ -23,3 +23,7 @@ coverage.xml
 # Home Assistant configuration
 config/*
 !config/configuration.yaml
+
+# CarConnectivity local dev config (contains credentials - never commit)
+custom_components/ha_volkswagen/carconnectivity.json
+*.tokenstore
