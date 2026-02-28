@@ -1,4 +1,5 @@
 """Tests for the VolkswagenDataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -15,7 +16,12 @@ from custom_components.ha_volkswagen.const import (
 )
 from custom_components.ha_volkswagen.coordinator import VolkswagenDataUpdateCoordinator
 
-from .conftest import CONFIG_ENTRY_DATA, TEST_VIN, make_mock_electric_vehicle, make_mock_garage
+from .conftest import (
+    CONFIG_ENTRY_DATA,
+    TEST_VIN,
+    make_mock_electric_vehicle,
+    make_mock_garage,
+)
 
 
 def _make_entry(**overrides) -> MockConfigEntry:
@@ -32,8 +38,11 @@ def config_entry() -> MockConfigEntry:
 # async_setup
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
-async def test_async_setup_creates_car_connectivity(hass, mock_carconnectivity, config_entry):
+async def test_async_setup_creates_car_connectivity(
+    hass, mock_carconnectivity, config_entry
+):
     """async_setup should create and start a CarConnectivity instance."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
@@ -48,8 +57,11 @@ async def test_async_setup_creates_car_connectivity(hass, mock_carconnectivity, 
 # _async_update_data
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
-async def test_first_refresh_returns_garage(hass, mock_carconnectivity, config_entry, mock_garage):
+async def test_first_refresh_returns_garage(
+    hass, mock_carconnectivity, config_entry, mock_garage
+):
     """After a refresh the coordinator data should be the garage."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
@@ -65,7 +77,9 @@ async def test_first_refresh_returns_garage(hass, mock_carconnectivity, config_e
 
 
 @pytest.mark.asyncio
-async def test_update_failure_raises_update_failed(hass, mock_carconnectivity, config_entry):
+async def test_update_failure_raises_update_failed(
+    hass, mock_carconnectivity, config_entry
+):
     """When fetch_all raises a non-auth error UpdateFailed should be raised."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
@@ -79,7 +93,9 @@ async def test_update_failure_raises_update_failed(hass, mock_carconnectivity, c
 
 
 @pytest.mark.asyncio
-async def test_none_garage_raises_update_failed(hass, mock_carconnectivity, config_entry):
+async def test_none_garage_raises_update_failed(
+    hass, mock_carconnectivity, config_entry
+):
     """When get_garage returns None UpdateFailed should be raised."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
@@ -96,8 +112,11 @@ async def test_none_garage_raises_update_failed(hass, mock_carconnectivity, conf
 # get_vehicles
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
-async def test_get_vehicles_returns_all_when_no_filter(hass, mock_carconnectivity, config_entry, mock_garage, mock_electric_vehicle):
+async def test_get_vehicles_returns_all_when_no_filter(
+    hass, mock_carconnectivity, config_entry, mock_garage, mock_electric_vehicle
+):
     """get_vehicles should return all vehicles when CONF_SELECTED_VINS is empty."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
@@ -144,8 +163,11 @@ async def test_get_vehicles_returns_empty_when_no_data(hass, config_entry):
 # async_shutdown
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.asyncio
-async def test_shutdown_calls_car_connectivity_shutdown(hass, mock_carconnectivity, config_entry):
+async def test_shutdown_calls_car_connectivity_shutdown(
+    hass, mock_carconnectivity, config_entry
+):
     """async_shutdown should call CarConnectivity.shutdown()."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)

@@ -1,4 +1,5 @@
 """Climate platform for the HA Volkswagen integration (EV climatization)."""
+
 from __future__ import annotations
 
 import logging
@@ -100,7 +101,9 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
             return settings.target_temperature.value
         return None
 
-    def _send_climatization_command(self, command: str, target_temp: float | None = None) -> None:
+    def _send_climatization_command(
+        self, command: str, target_temp: float | None = None
+    ) -> None:
         """Send climatization start/stop command. Runs in executor thread."""
         clim = self._vehicle.climatization
         cmd_obj = clim.commands.get_command(_CLIMATIZATION_COMMAND_KEY)

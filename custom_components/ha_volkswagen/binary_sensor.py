@@ -1,4 +1,5 @@
 """Binary sensor platform for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
@@ -133,7 +134,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
             if v.charging.connector.connection_state.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     # EV / Hybrid — actively charging
     VolkswagenBinarySensorDescription(
@@ -145,7 +148,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
             if v.charging.state.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     # Vehicle network connectivity
     VolkswagenBinarySensorDescription(
@@ -179,7 +184,9 @@ async def async_setup_entry(
                     )
             except Exception:
                 _LOGGER.debug(
-                    "Skipping binary sensor %s for %s", description.key, vehicle.vin.value
+                    "Skipping binary sensor %s for %s",
+                    description.key,
+                    vehicle.vin.value,
                 )
 
     async_add_entities(entities)

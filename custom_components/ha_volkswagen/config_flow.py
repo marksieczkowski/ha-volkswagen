@@ -1,4 +1,5 @@
 """Config flow for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
@@ -9,7 +10,12 @@ from typing import Any
 import voluptuous as vol
 from carconnectivity import carconnectivity as cc
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -61,7 +67,9 @@ def _try_connect(config_dict: dict, tokenstore_path: str | None = None) -> list:
     if tokenstore_path is not None:
         # Reuse an existing tokenstore so we don't force a fresh VW OAuth flow
         # every validation attempt (VW rate-limits rapid re-auths).
-        instance = cc.CarConnectivity(config=config_dict, tokenstore_file=tokenstore_path)
+        instance = cc.CarConnectivity(
+            config=config_dict, tokenstore_file=tokenstore_path
+        )
         try:
             instance.fetch_all()
             instance.persist()
@@ -75,7 +83,9 @@ def _try_connect(config_dict: dict, tokenstore_path: str | None = None) -> list:
     else:
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_tokenstore = os.path.join(tmp_dir, "tokenstore")
-            instance = cc.CarConnectivity(config=config_dict, tokenstore_file=tmp_tokenstore)
+            instance = cc.CarConnectivity(
+                config=config_dict, tokenstore_file=tmp_tokenstore
+            )
             try:
                 instance.fetch_all()
                 garage = instance.get_garage()
@@ -127,9 +137,15 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
                 # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means
                 # the account is rate-limited after a recent auth. Treat as cannot_connect
                 # so the user knows to wait and retry rather than change their password.
-                if any(word in err_str for word in ("invalid_request", "bad_request", "rate", "too many")):
+                if any(
+                    word in err_str
+                    for word in ("invalid_request", "bad_request", "rate", "too many")
+                ):
                     errors["base"] = "cannot_connect"
-                elif any(word in err_str for word in ("unauthorized", "401", "403", "credential", "password")):
+                elif any(
+                    word in err_str
+                    for word in ("unauthorized", "401", "403", "credential", "password")
+                ):
                     errors["base"] = "invalid_auth"
                 else:
                     _LOGGER.exception("Unexpected error connecting to Volkswagen API")
@@ -160,7 +176,9 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
         vehicle_options = [
             SelectOptionDict(
                 value=v.vin.value,
-                label=f"{v.model.value} ({v.vin.value})" if v.model.enabled else v.vin.value,
+                label=f"{v.model.value} ({v.vin.value})"
+                if v.model.enabled
+                else v.vin.value,
             )
             for v in self._discovered_vehicles
         ]

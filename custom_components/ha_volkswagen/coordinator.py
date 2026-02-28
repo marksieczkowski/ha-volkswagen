@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
@@ -126,11 +127,16 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         except Exception as err:
             # Surface authentication errors distinctly so HA can prompt re-auth
             err_str = str(err).lower()
-            if any(word in err_str for word in ("auth", "unauthorized", "401", "403", "token")):
+            if any(
+                word in err_str
+                for word in ("auth", "unauthorized", "401", "403", "token")
+            ):
                 raise ConfigEntryAuthFailed(
                     f"Authentication failed for Volkswagen account: {err}"
                 ) from err
-            raise UpdateFailed(f"Error communicating with Volkswagen API: {err}") from err
+            raise UpdateFailed(
+                f"Error communicating with Volkswagen API: {err}"
+            ) from err
 
     def get_vehicles(self) -> list:
         """Return vehicles, optionally filtered to the user's selected VINs."""

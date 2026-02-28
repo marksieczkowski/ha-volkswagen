@@ -1,4 +1,5 @@
 """Lock platform for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
@@ -35,8 +36,7 @@ async def async_setup_entry(
     coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        VolkswagenLock(coordinator, vehicle)
-        for vehicle in coordinator.get_vehicles()
+        VolkswagenLock(coordinator, vehicle) for vehicle in coordinator.get_vehicles()
     )
 
 

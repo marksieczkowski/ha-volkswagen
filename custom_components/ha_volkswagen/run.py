@@ -22,32 +22,38 @@ LOG: logging.Logger = logging.getLogger("carconnectivity-example")
 
 
 def main() -> None:
-    """ Simple example showing how to retrieve all vehicles from the account """
+    """Simple example showing how to retrieve all vehicles from the account"""
 
-    tokenstore_file: str = os.path.join(tempfile.gettempdir(), 'tokenstore')
+    tokenstore_file: str = os.path.join(tempfile.gettempdir(), "tokenstore")
 
     log_level: int = LOG_LEVELS.index(DEFAULT_LOG_LEVEL)
 
-    logging.basicConfig(level=LOG_LEVELS[log_level], format='%(asctime)s:%(levelname)s:%(message)s', datefmt='%Y-%m-%dT%H:%M:%S%z')
+    logging.basicConfig(
+        level=LOG_LEVELS[log_level],
+        format="%(asctime)s:%(levelname)s:%(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+    )
 
-    print('#  read CarConnectivity configuration')
-    with open(CONFIG_FILE, 'r', encoding='utf-8') as config_file:
+    print("#  read CarConnectivity configuration")
+    with open(CONFIG_FILE, "r", encoding="utf-8") as config_file:
         config_dict = json.load(config_file)
-        print('#  Login')
-        car_connectivity = carconnectivity.CarConnectivity(config=config_dict, tokenstore_file=tokenstore_file)
-        print('#  fetch data')
+        print("#  Login")
+        car_connectivity = carconnectivity.CarConnectivity(
+            config=config_dict, tokenstore_file=tokenstore_file
+        )
+        print("#  fetch data")
         car_connectivity.fetch_all()
-        print('#  getData')
+        print("#  getData")
         garage: Optional[Garage] = car_connectivity.get_garage()
         if garage is not None:
-            print('#  list all vehicles')
+            print("#  list all vehicles")
             for vehicle in garage.list_vehicles():
-                print(f'#  {vehicle}')
-        print('#  Shutdown')
+                print(f"#  {vehicle}")
+        print("#  Shutdown")
         car_connectivity.shutdown()
 
-    print('#  done')
+    print("#  done")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

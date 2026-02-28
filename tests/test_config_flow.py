@@ -1,4 +1,5 @@
 """Tests for the Volkswagen config flow."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -38,6 +39,7 @@ def mock_setup_entry():
     ):
         yield
 
+
 _STEP_USER_INPUT: dict[str, Any] = {
     CONF_USERNAME: TEST_USERNAME,
     CONF_PASSWORD: TEST_PASSWORD,
@@ -67,6 +69,7 @@ def _patch_connect(vehicles: list | None = None, raises: Exception | None = None
 # ---------------------------------------------------------------------------
 # Happy path
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_full_flow_creates_entry(hass):
@@ -113,6 +116,7 @@ async def test_no_vehicles_creates_entry_immediately(hass):
 # ---------------------------------------------------------------------------
 # Error paths
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_invalid_auth_shows_error(hass):
@@ -175,6 +179,7 @@ async def test_duplicate_entry_aborts(hass):
 # ---------------------------------------------------------------------------
 # Options flow
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.asyncio
 async def test_options_flow_updates_scan_interval(hass):

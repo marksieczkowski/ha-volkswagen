@@ -1,4 +1,5 @@
 """Sensor platform for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
@@ -79,7 +80,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.get_electric_drive() and v.get_electric_drive().level.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="ev_range",
@@ -92,7 +95,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.get_electric_drive() and v.get_electric_drive().range.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="fuel_level",
@@ -105,7 +110,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.get_combustion_drive() and v.get_combustion_drive().level.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="fuel_range",
@@ -119,7 +126,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.get_combustion_drive() and v.get_combustion_drive().range.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="outside_temperature",
@@ -127,7 +136,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda v: v.outside_temperature.value if v.outside_temperature.enabled else None,
+        value_fn=lambda v: v.outside_temperature.value
+        if v.outside_temperature.enabled
+        else None,
     ),
     VolkswagenSensorDescription(
         key="charge_power",
@@ -136,7 +147,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         value_fn=lambda v: v.charging.power.value if v.charging.power.enabled else None,
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="charge_rate",
@@ -145,7 +158,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda v: v.charging.rate.value if v.charging.rate.enabled else None,
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="charging_state",
@@ -156,7 +171,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.charging.state.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="inspection_due_at",
@@ -192,7 +209,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.maintenance.oil_service_due_at.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
     VolkswagenSensorDescription(
         key="oil_service_due_after",
@@ -206,7 +225,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             if v.maintenance.oil_service_due_after.enabled
             else None
         ),
-        supported_fn=lambda v: isinstance(v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)),
+        supported_fn=lambda v: isinstance(
+            v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)
+        ),
     ),
 )
 

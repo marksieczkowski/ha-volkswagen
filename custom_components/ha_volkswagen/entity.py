@@ -1,4 +1,5 @@
 """Base entity for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -41,7 +42,9 @@ class VolkswagenBaseEntity(CoordinatorEntity["VolkswagenDataUpdateCoordinator"])
         if self._vehicle.model_year.enabled:
             year = str(self._vehicle.model_year.value)
 
-        model_with_year = f"{year} {model}" if year and model else (model or "Volkswagen")
+        model_with_year = (
+            f"{year} {model}" if year and model else (model or "Volkswagen")
+        )
 
         return DeviceInfo(
             identifiers={(DOMAIN, vin)},

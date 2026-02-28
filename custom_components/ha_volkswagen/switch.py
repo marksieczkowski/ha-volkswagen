@@ -1,4 +1,5 @@
 """Switch platform for the HA Volkswagen integration (EV charging)."""
+
 from __future__ import annotations
 
 import logging
@@ -31,9 +32,9 @@ _CHARGING_COMMAND_KEY = "start-stop"
 # Covers both the base ChargingState strings and VW NA-specific strings.
 _CHARGING_STATE_STRINGS = {
     "charging",
-    "ready_for_charging",       # base ChargingState.READY_FOR_CHARGING
-    "readyforcharging",         # VolkswagenChargingState variant
-    "charginghvbattery",        # VolkswagenChargingState.CHARGING
+    "ready_for_charging",  # base ChargingState.READY_FOR_CHARGING
+    "readyforcharging",  # VolkswagenChargingState variant
+    "charginghvbattery",  # VolkswagenChargingState.CHARGING
     "conservation",
     "chargepurposereachedandnotconservationcharging",
     "chargepurposereachedandconservation",

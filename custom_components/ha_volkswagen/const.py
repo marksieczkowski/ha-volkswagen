@@ -1,4 +1,5 @@
 """Constants for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 DOMAIN = "ha_volkswagen"

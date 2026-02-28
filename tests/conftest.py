@@ -1,4 +1,5 @@
 """Shared test fixtures for the HA Volkswagen integration tests."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,6 +15,7 @@ from homeassistant.core import HomeAssistant
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Allow HA to load custom components from custom_components/ directory."""
     yield
+
 
 from custom_components.ha_volkswagen.const import (
     CONF_COUNTRY,
@@ -48,6 +50,7 @@ CONFIG_ENTRY_DATA: dict[str, Any] = {
 # Mock vehicle helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_attr(value: Any, enabled: bool = True) -> MagicMock:
     """Create a mock attribute with .value and .enabled."""
     attr = MagicMock()
@@ -63,7 +66,9 @@ def _make_enum_attr(str_value: str, enabled: bool = True) -> MagicMock:
     return _make_attr(inner, enabled=enabled)
 
 
-def make_mock_electric_vehicle(vin: str = TEST_VIN, model: str = TEST_MODEL) -> MagicMock:
+def make_mock_electric_vehicle(
+    vin: str = TEST_VIN, model: str = TEST_MODEL
+) -> MagicMock:
     """Build a MagicMock shaped like a VolkswagenNAElectricVehicle."""
     vehicle = MagicMock()
 
@@ -159,6 +164,7 @@ def make_mock_garage(vehicles: list | None = None) -> MagicMock:
 # ---------------------------------------------------------------------------
 # Pytest fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def mock_electric_vehicle() -> MagicMock:

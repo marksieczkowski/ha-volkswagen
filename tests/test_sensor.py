@@ -1,4 +1,5 @@
 """Tests for the Volkswagen sensor platform."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -43,6 +44,7 @@ def _make_sensor(vehicle, key: str, coordinator=None) -> VolkswagenSensor:
 # Odometer
 # ---------------------------------------------------------------------------
 
+
 def test_odometer_returns_value():
     vehicle = make_mock_electric_vehicle()
     vehicle.odometer = _make_attr(12345.0)
@@ -60,6 +62,7 @@ def test_odometer_returns_none_when_disabled():
 # ---------------------------------------------------------------------------
 # Battery SoC
 # ---------------------------------------------------------------------------
+
 
 def test_battery_soc_returns_value():
     vehicle = make_mock_electric_vehicle()
@@ -90,6 +93,7 @@ def test_battery_soc_returns_none_when_no_electric_drive():
 # EV Range
 # ---------------------------------------------------------------------------
 
+
 def test_ev_range_returns_value():
     vehicle = make_mock_electric_vehicle()
     electric_drive = MagicMock()
@@ -102,6 +106,7 @@ def test_ev_range_returns_value():
 # ---------------------------------------------------------------------------
 # Outside temperature
 # ---------------------------------------------------------------------------
+
 
 def test_outside_temperature_returns_value():
     vehicle = make_mock_electric_vehicle()
@@ -121,6 +126,7 @@ def test_outside_temperature_returns_none_when_disabled():
 # Charging state
 # ---------------------------------------------------------------------------
 
+
 def test_charging_state_returns_enum_string():
     vehicle = make_mock_electric_vehicle()
     vehicle.charging.state = _make_enum_attr("readyForCharging")
@@ -139,9 +145,12 @@ def test_charging_state_returns_none_when_disabled():
 # supported_fn: EV-only sensors must not be added for combustion vehicles
 # ---------------------------------------------------------------------------
 
+
 def test_battery_soc_not_supported_for_combustion():
     """battery_soc should report unsupported for ICE-only vehicles."""
-    from carconnectivity_connectors.volkswagen_na.vehicle import VolkswagenNACombustionVehicle
+    from carconnectivity_connectors.volkswagen_na.vehicle import (
+        VolkswagenNACombustionVehicle,
+    )
 
     combustion_vehicle = MagicMock(spec=VolkswagenNACombustionVehicle)
     desc = _get_description("battery_soc")
@@ -150,7 +159,9 @@ def test_battery_soc_not_supported_for_combustion():
 
 def test_battery_soc_supported_for_electric():
     """battery_soc should report supported for EV vehicles."""
-    from carconnectivity_connectors.volkswagen_na.vehicle import VolkswagenNAElectricVehicle
+    from carconnectivity_connectors.volkswagen_na.vehicle import (
+        VolkswagenNAElectricVehicle,
+    )
 
     ev_vehicle = MagicMock(spec=VolkswagenNAElectricVehicle)
     desc = _get_description("battery_soc")
@@ -159,7 +170,9 @@ def test_battery_soc_supported_for_electric():
 
 def test_fuel_level_not_supported_for_electric():
     """fuel_level should report unsupported for EV-only vehicles."""
-    from carconnectivity_connectors.volkswagen_na.vehicle import VolkswagenNAElectricVehicle
+    from carconnectivity_connectors.volkswagen_na.vehicle import (
+        VolkswagenNAElectricVehicle,
+    )
 
     ev_vehicle = MagicMock(spec=VolkswagenNAElectricVehicle)
     desc = _get_description("fuel_level")
@@ -168,7 +181,9 @@ def test_fuel_level_not_supported_for_electric():
 
 def test_fuel_level_supported_for_combustion():
     """fuel_level should report supported for combustion vehicles."""
-    from carconnectivity_connectors.volkswagen_na.vehicle import VolkswagenNACombustionVehicle
+    from carconnectivity_connectors.volkswagen_na.vehicle import (
+        VolkswagenNACombustionVehicle,
+    )
 
     combustion_vehicle = MagicMock(spec=VolkswagenNACombustionVehicle)
     desc = _get_description("fuel_level")
@@ -178,6 +193,7 @@ def test_fuel_level_supported_for_combustion():
 # ---------------------------------------------------------------------------
 # Odometer is supported for all vehicle types
 # ---------------------------------------------------------------------------
+
 
 def test_odometer_supported_for_all_types():
     """odometer should have a supported_fn that returns True for any vehicle."""

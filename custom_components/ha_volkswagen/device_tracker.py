@@ -1,4 +1,5 @@
 """Device tracker platform for the HA Volkswagen integration."""
+
 from __future__ import annotations
 
 import logging
