@@ -61,12 +61,18 @@ class VolkswagenSensorDescription(SensorEntityDescription):
 
 
 SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
+    # NOTE: The VW NA connector sets vehicle.odometer from currentMileage, but a later
+    # code path in the same function unconditionally resets it to None when the API
+    # response lacks a 'measurements' key (which the NA API omits for EV models).
+    # This is a bug in carconnectivity-connector-volkswagen-na; disable the entity by
+    # default so it doesn't show a confusing "unknown" value until upstream fixes it.
     VolkswagenSensorDescription(
         key="odometer",
         translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        entity_registry_enabled_default=False,
         value_fn=lambda v: v.odometer.value if v.odometer.enabled else None,
     ),
     VolkswagenSensorDescription(
