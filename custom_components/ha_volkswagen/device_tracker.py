@@ -44,6 +44,7 @@ class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
 
     _attr_source_type = SourceType.GPS
     _attr_icon = "mdi:car"
+    _attr_entity_category = None  # TrackerEntity defaults to DIAGNOSTIC; override to show in main controls
 
     def __init__(
         self,
