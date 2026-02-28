@@ -153,10 +153,13 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
         ),
     ),
     # Vehicle network connectivity
+    # NOTE: VW NA API never returns connectionState, so connection_state.enabled is
+    # always False. Disabled by default to avoid showing "unknown".
     VolkswagenBinarySensorDescription(
         key="vehicle_online",
         translation_key="vehicle_online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_registry_enabled_default=False,
         value_fn=lambda v: (
             v.connection_state.value.value.lower() in {"online", "reachable"}
             if v.connection_state.enabled

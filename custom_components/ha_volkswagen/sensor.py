@@ -136,12 +136,15 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
             v, (VolkswagenNACombustionVehicle, VolkswagenNAHybridVehicle)
         ),
     ),
+    # NOTE: Populated from data['measurements']['temperatureOutsideStatus'], which the
+    # VW NA API omits for EV models. Disabled by default to avoid showing "unknown".
     VolkswagenSensorDescription(
         key="outside_temperature",
         translation_key="outside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_registry_enabled_default=False,
         value_fn=lambda v: v.outside_temperature.value
         if v.outside_temperature.enabled
         else None,
