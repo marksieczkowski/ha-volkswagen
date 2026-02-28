@@ -57,7 +57,9 @@ class VolkswagenBaseEntity(CoordinatorEntity["VolkswagenDataUpdateCoordinator"])
         if not super().available:
             return False
         conn = self._vehicle.connection_state
+        # If the API doesn't provide a connection_state (conn.enabled is False),
+        # treat the vehicle as available — the VW NA API omits this field.
         if not conn.enabled:
-            return False
-        # ConnectionState.ONLINE = 'online', ConnectionState.REACHABLE = 'reachable'
+            return True
+        # When a connection state IS provided, only mark available if online/reachable.
         return conn.value.value.lower() in {"online", "reachable"}

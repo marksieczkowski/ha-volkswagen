@@ -4,7 +4,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from carconnectivity_connectors.volkswagen_na.charging import VolkswagenChargingState
 from carconnectivity_connectors.volkswagen_na.vehicle import (
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
@@ -28,13 +27,16 @@ _LOGGER = logging.getLogger(__name__)
 
 _CHARGING_COMMAND_KEY = "start-stop"
 
-# States that indicate the vehicle is actively drawing charge
-_CHARGING_STATES = {
-    VolkswagenChargingState.CHARGING,  # 'chargingHVBattery'
-    VolkswagenChargingState.READY_FOR_CHARGING,  # 'readyForCharging'
-    VolkswagenChargingState.CONSERVATION,  # 'conservation'
-    VolkswagenChargingState.CHARGE_PURPOSE_REACHED_CONSERVATION,
-    VolkswagenChargingState.CHARGE_PURPOSE_REACHED_NOT_CONSERVATION_CHARGING,
+# String values (from .value on the enum) that mean charging is on/enabled.
+# Covers both the base ChargingState strings and VW NA-specific strings.
+_CHARGING_STATE_STRINGS = {
+    "charging",
+    "ready_for_charging",       # base ChargingState.READY_FOR_CHARGING
+    "readyforcharging",         # VolkswagenChargingState variant
+    "charginghvbattery",        # VolkswagenChargingState.CHARGING
+    "conservation",
+    "chargepurposereachedandnotconservationcharging",
+    "chargepurposereachedandconservation",
 }
 
 
@@ -74,7 +76,11 @@ class VolkswagenChargingSwitch(VolkswagenBaseEntity, SwitchEntity):
         state_attr = self._vehicle.charging.state
         if not state_attr.enabled:
             return None
-        return state_attr.value in _CHARGING_STATES
+        # .value is an enum; .value.value (or str()) gives the canonical string
+        state_str = getattr(state_attr.value, "value", str(state_attr.value))
+        return state_str.lower().replace("_", "") in {
+            s.replace("_", "") for s in _CHARGING_STATE_STRINGS
+        }
 
     def _send_charging_command(self, command: str) -> None:
         """Send charge start/stop command. Runs in executor thread."""

@@ -94,12 +94,14 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         def _startup_sync() -> cc.CarConnectivity:
-            instance = cc.CarConnectivity(
+            # Do NOT call instance.startup() — that spawns a background polling
+            # thread inside the connector that would race our executor-based
+            # fetch_all() calls and cause 400 errors from the VW auth endpoint.
+            # The HA DataUpdateCoordinator is our sole polling driver.
+            return cc.CarConnectivity(
                 config=config_dict,
                 tokenstore_file=tokenstore_path,
             )
-            instance.startup()
-            return instance
 
         self.car_connectivity = await self.hass.async_add_executor_job(_startup_sync)
 
@@ -141,7 +143,10 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         return [v for v in all_vehicles if v.vin.value in selected]
 
     async def async_shutdown(self) -> None:
-        """Shut down the CarConnectivity instance (saves tokens/cache)."""
+        """Persist tokens and release the CarConnectivity instance."""
         if self.car_connectivity is not None:
-            await self.hass.async_add_executor_job(self.car_connectivity.shutdown)
+            # We never called startup() so we should not call shutdown() either
+            # (it would try to join the non-existent background thread).
+            # Persist tokens manually so the next startup can reuse them.
+            await self.hass.async_add_executor_job(self.car_connectivity.persist)
             self.car_connectivity = None

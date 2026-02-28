@@ -62,6 +62,7 @@ class VolkswagenSensorDescription(SensorEntityDescription):
 SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     VolkswagenSensorDescription(
         key="odometer",
+        translation_key="odometer",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -69,6 +70,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="battery_soc",
+        translation_key="battery_soc",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -81,6 +83,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="ev_range",
+        translation_key="ev_range",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -93,6 +96,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="fuel_level",
+        translation_key="fuel_level",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:gas-station",
@@ -105,6 +109,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="fuel_range",
+        translation_key="fuel_range",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -118,6 +123,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="outside_temperature",
+        translation_key="outside_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -125,6 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="charge_power",
+        translation_key="charge_power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
@@ -133,6 +140,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="charge_rate",
+        translation_key="charge_rate",
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
@@ -141,9 +149,10 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="charging_state",
+        translation_key="charging_state",
         icon="mdi:ev-station",
         value_fn=lambda v: (
-            v.charging.state.value.value
+            getattr(v.charging.state.value, "value", str(v.charging.state.value))
             if v.charging.state.enabled
             else None
         ),
@@ -151,6 +160,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="inspection_due_at",
+        translation_key="inspection_due_at",
         device_class=SensorDeviceClass.DATE,
         entity_registry_enabled_default=False,
         value_fn=lambda v: (
@@ -161,6 +171,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="inspection_due_after",
+        translation_key="inspection_due_after",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
@@ -173,6 +184,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="oil_service_due_at",
+        translation_key="oil_service_due_at",
         device_class=SensorDeviceClass.DATE,
         entity_registry_enabled_default=False,
         value_fn=lambda v: (
@@ -184,6 +196,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
     ),
     VolkswagenSensorDescription(
         key="oil_service_due_after",
+        translation_key="oil_service_due_after",
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.KILOMETERS,

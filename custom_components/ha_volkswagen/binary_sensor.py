@@ -55,6 +55,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Overall door lock — True means UNLOCKED (HA LOCK device class convention)
     VolkswagenBinarySensorDescription(
         key="doors_locked",
+        translation_key="doors_locked",
         device_class=BinarySensorDeviceClass.LOCK,
         value_fn=lambda v: (
             v.doors.lock_state.value == Doors.LockState.UNLOCKED
@@ -65,30 +66,35 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Individual door open states
     VolkswagenBinarySensorDescription(
         key="door_front_left",
+        translation_key="door_front_left",
         device_class=BinarySensorDeviceClass.DOOR,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: _door_open(v, "front_left"),
+        value_fn=lambda v: _door_open(v, "frontLeft"),
     ),
     VolkswagenBinarySensorDescription(
         key="door_front_right",
+        translation_key="door_front_right",
         device_class=BinarySensorDeviceClass.DOOR,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: _door_open(v, "front_right"),
+        value_fn=lambda v: _door_open(v, "frontRight"),
     ),
     VolkswagenBinarySensorDescription(
         key="door_rear_left",
+        translation_key="door_rear_left",
         device_class=BinarySensorDeviceClass.DOOR,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: _door_open(v, "rear_left"),
+        value_fn=lambda v: _door_open(v, "rearLeft"),
     ),
     VolkswagenBinarySensorDescription(
         key="door_rear_right",
+        translation_key="door_rear_right",
         device_class=BinarySensorDeviceClass.DOOR,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: _door_open(v, "rear_right"),
+        value_fn=lambda v: _door_open(v, "rearRight"),
     ),
     VolkswagenBinarySensorDescription(
         key="trunk",
+        translation_key="trunk",
         device_class=BinarySensorDeviceClass.DOOR,
         entity_registry_enabled_default=False,
         value_fn=lambda v: _door_open(v, "trunk"),
@@ -96,6 +102,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Windows — overall open state
     VolkswagenBinarySensorDescription(
         key="windows_open",
+        translation_key="windows_open",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda v: (
             v.windows.open_state.value == Windows.OpenState.OPEN
@@ -106,6 +113,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Exterior lights
     VolkswagenBinarySensorDescription(
         key="lights_on",
+        translation_key="lights_on",
         device_class=BinarySensorDeviceClass.LIGHT,
         value_fn=lambda v: (
             v.lights.light_state.value == Lights.LightState.ON
@@ -116,6 +124,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # EV / Hybrid — charging cable connected
     VolkswagenBinarySensorDescription(
         key="charging_connected",
+        translation_key="charging_connected",
         device_class=BinarySensorDeviceClass.PLUG,
         value_fn=lambda v: (
             v.charging.connector.connection_state.enabled
@@ -129,6 +138,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # EV / Hybrid — actively charging
     VolkswagenBinarySensorDescription(
         key="charging_active",
+        translation_key="charging_active",
         icon="mdi:ev-station",
         value_fn=lambda v: (
             v.charging.state.value.value.lower() == "charginghvbattery"
@@ -140,6 +150,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Vehicle network connectivity
     VolkswagenBinarySensorDescription(
         key="vehicle_online",
+        translation_key="vehicle_online",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda v: (
             v.connection_state.value.value.lower() in {"online", "reachable"}

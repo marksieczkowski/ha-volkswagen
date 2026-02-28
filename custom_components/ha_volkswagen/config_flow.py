@@ -31,7 +31,7 @@ from .const import (
     MIN_SCAN_INTERVAL,
     SUPPORTED_COUNTRIES,
 )
-from .coordinator import build_carconnectivity_config
+from .coordinator import build_carconnectivity_config, get_tokenstore_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,20 +56,34 @@ STEP_USER_SCHEMA = vol.Schema(
 )
 
 
-def _try_connect(config_dict: dict) -> list:
+def _try_connect(config_dict: dict, tokenstore_path: str | None = None) -> list:
     """Attempt to connect and return discovered vehicles.  Runs in executor thread."""
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tokenstore_path = os.path.join(tmp_dir, "tokenstore")
+    if tokenstore_path is not None:
+        # Reuse an existing tokenstore so we don't force a fresh VW OAuth flow
+        # every validation attempt (VW rate-limits rapid re-auths).
         instance = cc.CarConnectivity(config=config_dict, tokenstore_file=tokenstore_path)
         try:
-            instance.startup()
             instance.fetch_all()
+            instance.persist()
             garage = instance.get_garage()
             if garage is None:
                 return []
             return list(garage.list_vehicles())
-        finally:
-            instance.shutdown()
+        except Exception:
+            instance.persist()
+            raise
+    else:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_tokenstore = os.path.join(tmp_dir, "tokenstore")
+            instance = cc.CarConnectivity(config=config_dict, tokenstore_file=tmp_tokenstore)
+            try:
+                instance.fetch_all()
+                garage = instance.get_garage()
+                if garage is None:
+                    return []
+                return list(garage.list_vehicles())
+            finally:
+                instance.persist()
 
 
 class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -97,13 +111,25 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             config_dict = build_carconnectivity_config(user_input)
+            # Re-use tokenstore if it already exists for this account — avoids
+            # re-authenticating against VW's server on every validation attempt.
+            tokenstore_path = get_tokenstore_path(
+                self.hass.config.config_dir,
+                f"{username}_{country}",
+            )
             try:
                 vehicles = await self.hass.async_add_executor_job(
-                    _try_connect, config_dict
+                    _try_connect, config_dict, tokenstore_path
                 )
             except Exception as err:
                 err_str = str(err).lower()
-                if any(word in err_str for word in ("auth", "unauthorized", "401", "403", "credential")):
+                _LOGGER.debug("Connection attempt failed: %s", err)
+                # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means
+                # the account is rate-limited after a recent auth. Treat as cannot_connect
+                # so the user knows to wait and retry rather than change their password.
+                if any(word in err_str for word in ("invalid_request", "bad_request", "rate", "too many")):
+                    errors["base"] = "cannot_connect"
+                elif any(word in err_str for word in ("unauthorized", "401", "403", "credential", "password")):
                     errors["base"] = "invalid_auth"
                 else:
                     _LOGGER.exception("Unexpected error connecting to Volkswagen API")
