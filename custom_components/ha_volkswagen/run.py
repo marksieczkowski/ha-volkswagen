@@ -1,21 +1,19 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import json
+import logging
 import os
 import tempfile
-import logging
+from typing import TYPE_CHECKING
 
 # https://github.com/tillsteinbach/CarConnectivity
 from carconnectivity import carconnectivity
 
 if TYPE_CHECKING:
-    from typing import List, Optional
-
     from carconnectivity.garage import Garage
 
 
-LOG_LEVELS: List[str] = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+LOG_LEVELS: list[str] = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 DEFAULT_LOG_LEVEL = "ERROR"
 CONFIG_FILE = "carconnectivity.json"
 LOG: logging.Logger = logging.getLogger("carconnectivity-example")
@@ -23,7 +21,6 @@ LOG: logging.Logger = logging.getLogger("carconnectivity-example")
 
 def main() -> None:
     """Simple example showing how to retrieve all vehicles from the account"""
-
     tokenstore_file: str = os.path.join(tempfile.gettempdir(), "tokenstore")
 
     log_level: int = LOG_LEVELS.index(DEFAULT_LOG_LEVEL)
@@ -44,7 +41,7 @@ def main() -> None:
         print("#  fetch data")
         car_connectivity.fetch_all()
         print("#  getData")
-        garage: Optional[Garage] = car_connectivity.get_garage()
+        garage: Garage | None = car_connectivity.get_garage()
         if garage is not None:
             print("#  list all vehicles")
             for vehicle in garage.list_vehicles():

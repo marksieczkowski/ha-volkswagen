@@ -8,8 +8,6 @@ from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from carconnectivity import carconnectivity as cc
-
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -27,8 +25,8 @@ from .const import (
 
 if TYPE_CHECKING:
     from carconnectivity.garage import Garage
-
     from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +106,8 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
 
     def _fetch_all_sync(self) -> Garage:
         """Blocking fetch — runs in the executor thread."""
-        assert self.car_connectivity is not None
+        if self.car_connectivity is None:
+            raise UpdateFailed("CarConnectivity not initialised")
         self.car_connectivity.fetch_all()
         self.car_connectivity.persist()
         garage = self.car_connectivity.get_garage()

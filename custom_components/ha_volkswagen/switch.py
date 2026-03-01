@@ -9,7 +9,6 @@ from carconnectivity_connectors.volkswagen_na.vehicle import (
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
 )
-
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DOMAIN
@@ -17,7 +16,6 @@ from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback

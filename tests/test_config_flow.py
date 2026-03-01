@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
-
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -21,7 +20,6 @@ from custom_components.ha_volkswagen.const import (
 )
 
 from .conftest import (
-    CONFIG_ENTRY_DATA,
     TEST_COUNTRY,
     TEST_PASSWORD,
     TEST_USERNAME,

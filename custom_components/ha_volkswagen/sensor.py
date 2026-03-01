@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from carconnectivity_connectors.volkswagen_na.vehicle import (
+    VolkswagenNACombustionVehicle,
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
-    VolkswagenNACombustionVehicle,
 )
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -31,8 +29,9 @@ from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
-    from carconnectivity.vehicle import GenericVehicle
+    from collections.abc import Callable
 
+    from carconnectivity.vehicle import GenericVehicle
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _safe_attr(vehicle: GenericVehicle, *attr_path: str) -> Any:
-    """Safely traverse a chain of attribute names, returning None if any are disabled/absent."""
+    """Safely traverse attribute names, returning None if any are disabled/absent."""
     obj = vehicle
     for attr in attr_path:
         obj = getattr(obj, attr, None)

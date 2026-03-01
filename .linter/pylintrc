@@ -17,7 +17,16 @@ disable=
     # Home Assistant specific
     no-member,
     unused-argument,
-    broad-exception-caught
+    broad-exception-caught,
+    # Dataclass false positives — pylint does not correctly infer keyword args
+    # inherited from parent dataclass fields (E1123)
+    unexpected-keyword-arg,
+    # HA entities implement async_* methods instead of the abstract sync versions
+    abstract-method,
+    # Style preferences — handled by Ruff instead
+    consider-using-assignment-expr,
+    consider-alternative-union-syntax,
+    deprecated-typing-alias
 
 [FORMAT]
 max-line-length=88

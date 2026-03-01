@@ -10,7 +10,6 @@ from carconnectivity_connectors.volkswagen_na.vehicle import (
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
 )
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -23,7 +22,6 @@ from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -108,9 +106,8 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         clim = self._vehicle.climatization
         cmd_obj = clim.commands.get_command(_CLIMATIZATION_COMMAND_KEY)
         if cmd_obj is None:
-            raise RuntimeError(
-                f"Climatization command not available for vehicle {self._vehicle.vin.value}"
-            )
+            vin = self._vehicle.vin.value
+            raise RuntimeError(f"Climatization command not available for vehicle {vin}")
         payload: dict[str, Any] = {"command": command}
         if target_temp is not None:
             payload["target_temperature"] = target_temp

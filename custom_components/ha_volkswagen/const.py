@@ -15,7 +15,7 @@ PLATFORMS = [
 
 # Config entry data keys
 CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
+CONF_PASSWORD = "password"  # nosec B105 — config-entry key, not a hardcoded credential
 CONF_COUNTRY = "country"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_SELECTED_VINS = "selected_vins"

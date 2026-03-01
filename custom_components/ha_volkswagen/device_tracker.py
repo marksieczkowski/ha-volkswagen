@@ -5,8 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from carconnectivity.position import Position
-
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
@@ -15,7 +13,6 @@ from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,7 +41,9 @@ class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
 
     _attr_source_type = SourceType.GPS
     _attr_icon = "mdi:car"
-    _attr_entity_category = None  # TrackerEntity defaults to DIAGNOSTIC; override to show in main controls
+    # Override TrackerEntity's default entity_category of DIAGNOSTIC so the entity
+    # appears in the main device controls rather than the diagnostics section.
+    _attr_entity_category = None
 
     def __init__(
         self,

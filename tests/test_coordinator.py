@@ -2,16 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ha_volkswagen.const import (
     CONF_SELECTED_VINS,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from custom_components.ha_volkswagen.coordinator import VolkswagenDataUpdateCoordinator

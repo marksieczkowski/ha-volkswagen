@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 from carconnectivity.doors import Doors
 from carconnectivity.lights import Lights
@@ -13,7 +13,6 @@ from carconnectivity_connectors.volkswagen_na.vehicle import (
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
 )
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -24,8 +23,9 @@ from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
-    from carconnectivity.vehicle import GenericVehicle
+    from collections.abc import Callable
 
+    from carconnectivity.vehicle import GenericVehicle
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback

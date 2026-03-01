@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from custom_components.ha_volkswagen.sensor import (
     SENSOR_DESCRIPTIONS,
     VolkswagenSensor,
@@ -196,6 +194,6 @@ def test_fuel_level_supported_for_combustion():
 
 
 def test_odometer_supported_for_all_types():
-    """odometer should have a supported_fn that returns True for any vehicle."""
+    """Odometer should have a supported_fn that returns True for any vehicle."""
     desc = _get_description("odometer")
     assert desc.supported_fn(MagicMock())

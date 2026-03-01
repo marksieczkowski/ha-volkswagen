@@ -7,8 +7,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.core import HomeAssistant
-
 
 # Enable custom integrations discovery in all tests
 @pytest.fixture(autouse=True)
@@ -24,7 +22,6 @@ from custom_components.ha_volkswagen.const import (
     CONF_SELECTED_VINS,
     CONF_USERNAME,
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
 )
 
 # ---------------------------------------------------------------------------

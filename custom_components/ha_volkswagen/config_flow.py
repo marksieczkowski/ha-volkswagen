@@ -9,7 +9,6 @@ from typing import Any
 
 import voluptuous as vol
 from carconnectivity import carconnectivity as cc
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -35,7 +34,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MIN_SCAN_INTERVAL,
-    SUPPORTED_COUNTRIES,
 )
 from .coordinator import build_carconnectivity_config, get_tokenstore_path
 
@@ -134,9 +132,9 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception as err:
                 err_str = str(err).lower()
                 _LOGGER.debug("Connection attempt failed: %s", err)
-                # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means
-                # the account is rate-limited after a recent auth. Treat as cannot_connect
-                # so the user knows to wait and retry rather than change their password.
+                # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means the
+                # account is rate-limited. Treat as cannot_connect so the user knows to
+                # wait and retry rather than change their password.
                 if any(
                     word in err_str
                     for word in ("invalid_request", "bad_request", "rate", "too many")

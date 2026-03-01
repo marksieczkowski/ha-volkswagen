@@ -6,7 +6,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from carconnectivity.doors import Doors
-
 from homeassistant.components.lock import LockEntity
 
 from .const import DOMAIN
@@ -14,7 +13,6 @@ from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,9 +64,8 @@ class VolkswagenLock(VolkswagenBaseEntity, LockEntity):
         """Send a lock or unlock command. Runs in executor thread."""
         cmd_obj = self._vehicle.commands.get_command(_LOCK_UNLOCK_COMMAND_KEY)
         if cmd_obj is None:
-            raise RuntimeError(
-                f"Lock/unlock command not available for vehicle {self._vehicle.vin.value}"
-            )
+            vin = self._vehicle.vin.value
+            raise RuntimeError(f"Lock/unlock command not available for vehicle {vin}")
         cmd_obj.value = {"command": command}
 
     async def async_lock(self, **kwargs: Any) -> None:
