@@ -171,7 +171,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda v: v.charging.rate.value if v.charging.rate.enabled else None,
+        value_fn=lambda v: v.charging.rate.value if v.charging.rate.enabled else 0,
         supported_fn=lambda v: isinstance(
             v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
         ),
