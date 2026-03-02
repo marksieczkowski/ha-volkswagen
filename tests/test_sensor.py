@@ -218,7 +218,7 @@ def _make_imperial_coordinator(vehicle):
 
 
 def test_ev_range_imperial_suggests_miles():
-    """In imperial mode native_value stays in km; HA auto-converts via suggested unit."""
+    """In imperial mode native_value stays in km; HA converts via suggested unit."""
     vehicle = make_mock_electric_vehicle()
     electric_drive = MagicMock()
     electric_drive.range = _make_attr(100.0)
