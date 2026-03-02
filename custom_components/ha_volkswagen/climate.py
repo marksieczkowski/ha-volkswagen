@@ -139,7 +139,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
     ) -> None:
         """Send climatization start/stop command. Runs in executor thread."""
         clim = self._vehicle.climatization
-        cmd_obj = clim.commands.get_command(_CLIMATIZATION_COMMAND_KEY)
+        cmd_obj = clim.commands.commands.get(_CLIMATIZATION_COMMAND_KEY)
         if cmd_obj is None:
             vin = self._vehicle.vin.value
             raise RuntimeError(f"Climatization command not available for vehicle {vin}")

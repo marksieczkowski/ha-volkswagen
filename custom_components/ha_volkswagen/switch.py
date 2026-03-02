@@ -83,7 +83,7 @@ class VolkswagenChargingSwitch(VolkswagenBaseEntity, SwitchEntity):
 
     def _send_charging_command(self, command: str) -> None:
         """Send charge start/stop command. Runs in executor thread."""
-        cmd_obj = self._vehicle.charging.commands.get_command(_CHARGING_COMMAND_KEY)
+        cmd_obj = self._vehicle.charging.commands.commands.get(_CHARGING_COMMAND_KEY)
         if cmd_obj is None:
             raise RuntimeError(
                 f"Charging command not available for vehicle {self._vehicle.vin.value}"

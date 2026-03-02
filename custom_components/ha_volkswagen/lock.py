@@ -25,6 +25,15 @@ _LOGGER = logging.getLogger(__name__)
 _LOCK_UNLOCK_COMMAND_KEY = "lock-unlock"
 
 
+def _supports_lock(vehicle: GenericVehicle) -> bool:
+    """Return True if the vehicle supports remote lock/unlock."""
+    return (
+        vehicle.doors is not None
+        and vehicle.doors.commands is not None
+        and vehicle.doors.commands.contains_command(_LOCK_UNLOCK_COMMAND_KEY)
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -34,7 +43,9 @@ async def async_setup_entry(
     coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        VolkswagenLock(coordinator, vehicle) for vehicle in coordinator.get_vehicles()
+        VolkswagenLock(coordinator, vehicle)
+        for vehicle in coordinator.get_vehicles()
+        if _supports_lock(vehicle)
     )
 
 
@@ -62,7 +73,7 @@ class VolkswagenLock(VolkswagenBaseEntity, LockEntity):
 
     def _send_lock_command(self, command: str) -> None:
         """Send a lock or unlock command. Runs in executor thread."""
-        cmd_obj = self._vehicle.commands.get_command(_LOCK_UNLOCK_COMMAND_KEY)
+        cmd_obj = self._vehicle.doors.commands.commands.get(_LOCK_UNLOCK_COMMAND_KEY)
         if cmd_obj is None:
             vin = self._vehicle.vin.value
             raise RuntimeError(f"Lock/unlock command not available for vehicle {vin}")
