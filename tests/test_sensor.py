@@ -227,18 +227,24 @@ def test_ev_range_imperial_suggests_miles():
     # native_value is still km — HA does the km→mi conversion using suggested unit
     assert sensor.native_value == 100.0
     from homeassistant.const import UnitOfLength
+
     assert sensor._attr_suggested_unit_of_measurement == UnitOfLength.MILES
     # native_unit_of_measurement comes from description (always km)
-    assert sensor.entity_description.native_unit_of_measurement == UnitOfLength.KILOMETERS
+    assert (
+        sensor.entity_description.native_unit_of_measurement == UnitOfLength.KILOMETERS
+    )
 
 
 def test_outside_temperature_imperial_suggests_fahrenheit():
     vehicle = make_mock_electric_vehicle()
     vehicle.outside_temperature = _make_attr(0.0)
-    sensor = _make_sensor(vehicle, "outside_temperature", _make_imperial_coordinator(vehicle))
+    sensor = _make_sensor(
+        vehicle, "outside_temperature", _make_imperial_coordinator(vehicle)
+    )
     # native_value is still °C
     assert sensor.native_value == 0.0
     from homeassistant.const import UnitOfTemperature
+
     assert sensor._attr_suggested_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
 
 
@@ -248,6 +254,7 @@ def test_charge_rate_imperial_suggests_mph():
     sensor = _make_sensor(vehicle, "charge_rate", _make_imperial_coordinator(vehicle))
     assert sensor.native_value == 100.0
     from homeassistant.const import UnitOfSpeed
+
     assert sensor._attr_suggested_unit_of_measurement == UnitOfSpeed.MILES_PER_HOUR
 
 
