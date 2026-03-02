@@ -6,6 +6,7 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from carconnectivity.charging import Charging
 from carconnectivity.doors import Doors
 from carconnectivity.lights import Lights
 from carconnectivity.windows import Windows
@@ -144,7 +145,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
         translation_key="charging_active",
         icon="mdi:ev-station",
         value_fn=lambda v: (
-            v.charging.state.value.value.lower() == "charginghvbattery"
+            v.charging.state.value == Charging.ChargingState.CHARGING
             if v.charging.state.enabled
             else None
         ),

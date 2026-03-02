@@ -76,32 +76,33 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         self._attr_unique_id = f"{vehicle.vin.value}_climatization"
 
     @property
+    def _use_fahrenheit(self) -> bool:
+        """Return True if HA is configured to use Fahrenheit."""
+        return self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT
+
+    @property
     def temperature_unit(self) -> str:
-        """Return °F or °C depending on the configured unit system."""
-        return (
-            UnitOfTemperature.FAHRENHEIT
-            if self.coordinator.is_imperial
-            else UnitOfTemperature.CELSIUS
-        )
+        """Return the temperature unit matching HA's configured unit system."""
+        return self.hass.config.units.temperature_unit
 
     @property
     def min_temp(self) -> float:
         """Return minimum climatization temperature."""
-        if self.coordinator.is_imperial:
+        if self._use_fahrenheit:
             return round(_CLIM_MIN_CELSIUS * 9 / 5 + 32)  # 60°F
         return _CLIM_MIN_CELSIUS
 
     @property
     def max_temp(self) -> float:
         """Return maximum climatization temperature."""
-        if self.coordinator.is_imperial:
+        if self._use_fahrenheit:
             return round(_CLIM_MAX_CELSIUS * 9 / 5 + 32)  # 85°F
         return _CLIM_MAX_CELSIUS
 
     @property
     def target_temperature_step(self) -> float:
         """Return temperature step (1°F or 0.5°C)."""
-        return 1.0 if self.coordinator.is_imperial else 0.5
+        return 1.0 if self._use_fahrenheit else 0.5
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -119,7 +120,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         temp = self._vehicle.outside_temperature
         if not temp.enabled:
             return None
-        target_unit = Temperature.F if self.coordinator.is_imperial else Temperature.C
+        target_unit = Temperature.F if self._use_fahrenheit else Temperature.C
         val = temp.temperature_in(target_unit)
         return round(val, 1) if val is not None else None
 
@@ -129,7 +130,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         settings = self._vehicle.climatization.settings
         if not (settings and settings.target_temperature.enabled):
             return None
-        target_unit = Temperature.F if self.coordinator.is_imperial else Temperature.C
+        target_unit = Temperature.F if self._use_fahrenheit else Temperature.C
         val = settings.target_temperature.temperature_in(target_unit)
         return round(val, 1) if val is not None else None
 
@@ -174,7 +175,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         temp = kwargs.get("temperature")
         if temp is None:
             return
-        if self.coordinator.is_imperial:
+        if self._use_fahrenheit:
             temp = (temp - 32) * 5 / 9  # convert °F → °C for the API
         await self.hass.async_add_executor_job(
             self._send_climatization_command, "start", temp
