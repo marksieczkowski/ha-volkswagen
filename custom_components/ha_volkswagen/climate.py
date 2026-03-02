@@ -158,7 +158,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         else:
             # Read target temp in Celsius for the API command.
             # Use temperature_in(Temperature.C) to handle the case where the library
-            # stores the value in Fahrenheit (as VW NA does for North American vehicles).
+            # stores the value in Fahrenheit (as VW NA does for NA vehicles).
             settings = self._vehicle.climatization.settings
             target_celsius = (
                 settings.target_temperature.temperature_in(Temperature.C)

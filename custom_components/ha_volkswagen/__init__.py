@@ -9,7 +9,7 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_UNIT_SYSTEM, DOMAIN
+from .const import DOMAIN
 from .coordinator import VolkswagenDataUpdateCoordinator
 
 if TYPE_CHECKING:

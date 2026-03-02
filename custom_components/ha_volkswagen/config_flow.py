@@ -62,7 +62,9 @@ STEP_USER_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_SYSTEM, default=DEFAULT_UNIT_SYSTEM): SelectSelector(
             SelectSelectorConfig(
                 options=[
-                    SelectOptionDict(value=UNIT_SYSTEM_IMPERIAL, label="Imperial (mi, °F)"),
+                    SelectOptionDict(
+                        value=UNIT_SYSTEM_IMPERIAL, label="Imperial (mi, °F)"
+                    ),
                     SelectOptionDict(value=UNIT_SYSTEM_METRIC, label="Metric (km, °C)"),
                 ],
                 mode=SelectSelectorMode.DROPDOWN,
@@ -243,11 +245,19 @@ class VolkswagenOptionsFlow(OptionsFlow):
                 vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
                     vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL)
                 ),
-                vol.Optional(CONF_UNIT_SYSTEM, default=current_unit_system): SelectSelector(
+                vol.Optional(
+                    CONF_UNIT_SYSTEM, default=current_unit_system
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=[
-                            SelectOptionDict(value=UNIT_SYSTEM_IMPERIAL, label="Imperial (mi, °F)"),
-                            SelectOptionDict(value=UNIT_SYSTEM_METRIC, label="Metric (km, °C)"),
+                            SelectOptionDict(
+                                value=UNIT_SYSTEM_IMPERIAL,
+                                label="Imperial (mi, °F)",
+                            ),
+                            SelectOptionDict(
+                                value=UNIT_SYSTEM_METRIC,
+                                label="Metric (km, °C)",
+                            ),
                         ],
                         mode=SelectSelectorMode.DROPDOWN,
                     )
