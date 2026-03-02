@@ -29,11 +29,15 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_SELECTED_VINS,
     CONF_SPIN,
+    CONF_UNIT_SYSTEM,
     CONF_USERNAME,
     DEFAULT_COUNTRY,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UNIT_SYSTEM,
     DOMAIN,
     MIN_SCAN_INTERVAL,
+    UNIT_SYSTEM_IMPERIAL,
+    UNIT_SYSTEM_METRIC,
 )
 from .coordinator import build_carconnectivity_config, get_tokenstore_path
 
@@ -54,6 +58,15 @@ STEP_USER_SCHEMA = vol.Schema(
         ),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
             vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL)
+        ),
+        vol.Optional(CONF_UNIT_SYSTEM, default=DEFAULT_UNIT_SYSTEM): SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value=UNIT_SYSTEM_IMPERIAL, label="Imperial (mi, °F)"),
+                    SelectOptionDict(value=UNIT_SYSTEM_METRIC, label="Metric (km, °C)"),
+                ],
+                mode=SelectSelectorMode.DROPDOWN,
+            )
         ),
         vol.Optional(CONF_SPIN): str,
     }
@@ -222,10 +235,22 @@ class VolkswagenOptionsFlow(OptionsFlow):
         current_interval = self.config_entry.data.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
+        current_unit_system = self.config_entry.data.get(
+            CONF_UNIT_SYSTEM, DEFAULT_UNIT_SYSTEM
+        )
         schema = vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
                     vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL)
+                ),
+                vol.Optional(CONF_UNIT_SYSTEM, default=current_unit_system): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(value=UNIT_SYSTEM_IMPERIAL, label="Imperial (mi, °F)"),
+                            SelectOptionDict(value=UNIT_SYSTEM_METRIC, label="Metric (km, °C)"),
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
                 ),
             }
         )

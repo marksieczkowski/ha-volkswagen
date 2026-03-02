@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from carconnectivity.climatization import Climatization
+from carconnectivity.units import Temperature
 from carconnectivity_connectors.volkswagen_na.vehicle import (
     VolkswagenNAElectricVehicle,
     VolkswagenNAHybridVehicle,
@@ -31,6 +32,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _CLIMATIZATION_COMMAND_KEY = "start-stop"
+
+_CLIM_MIN_CELSIUS = 15.5
+_CLIM_MAX_CELSIUS = 29.5
 
 # ClimatizationState values that mean climatization is active
 _ACTIVE_STATES = {
@@ -61,10 +65,6 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
     _attr_name = "Climatization"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.AUTO]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 15.5
-    _attr_max_temp = 29.5
-    _attr_target_temperature_step = 0.5
 
     def __init__(
         self,
@@ -74,6 +74,34 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         """Initialise the climate entity."""
         super().__init__(coordinator, vehicle)
         self._attr_unique_id = f"{vehicle.vin.value}_climatization"
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return °F or °C depending on the configured unit system."""
+        return (
+            UnitOfTemperature.FAHRENHEIT
+            if self.coordinator.is_imperial
+            else UnitOfTemperature.CELSIUS
+        )
+
+    @property
+    def min_temp(self) -> float:
+        """Return minimum climatization temperature."""
+        if self.coordinator.is_imperial:
+            return round(_CLIM_MIN_CELSIUS * 9 / 5 + 32)  # 60°F
+        return _CLIM_MIN_CELSIUS
+
+    @property
+    def max_temp(self) -> float:
+        """Return maximum climatization temperature."""
+        if self.coordinator.is_imperial:
+            return round(_CLIM_MAX_CELSIUS * 9 / 5 + 32)  # 85°F
+        return _CLIM_MAX_CELSIUS
+
+    @property
+    def target_temperature_step(self) -> float:
+        """Return temperature step (1°F or 0.5°C)."""
+        return 1.0 if self.coordinator.is_imperial else 0.5
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -89,15 +117,21 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return outside temperature as a proxy for cabin ambient."""
         temp = self._vehicle.outside_temperature
-        return temp.value if temp.enabled else None
+        if not temp.enabled:
+            return None
+        target_unit = Temperature.F if self.coordinator.is_imperial else Temperature.C
+        val = temp.temperature_in(target_unit)
+        return round(val, 1) if val is not None else None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the climatization target temperature."""
         settings = self._vehicle.climatization.settings
-        if settings and settings.target_temperature.enabled:
-            return settings.target_temperature.value
-        return None
+        if not (settings and settings.target_temperature.enabled):
+            return None
+        target_unit = Temperature.F if self.coordinator.is_imperial else Temperature.C
+        val = settings.target_temperature.temperature_in(target_unit)
+        return round(val, 1) if val is not None else None
 
     def _send_climatization_command(
         self, command: str, target_temp: float | None = None
@@ -121,9 +155,17 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
                 self._send_climatization_command, "stop"
             )
         else:
-            target = self.target_temperature
+            # Read target temp in Celsius for the API command.
+            # Use temperature_in(Temperature.C) to handle the case where the library
+            # stores the value in Fahrenheit (as VW NA does for North American vehicles).
+            settings = self._vehicle.climatization.settings
+            target_celsius = (
+                settings.target_temperature.temperature_in(Temperature.C)
+                if settings and settings.target_temperature.enabled
+                else None
+            )
             await self.hass.async_add_executor_job(
-                self._send_climatization_command, "start", target
+                self._send_climatization_command, "start", target_celsius
             )
         await self.coordinator.async_request_refresh()
 
@@ -132,6 +174,8 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         temp = kwargs.get("temperature")
         if temp is None:
             return
+        if self.coordinator.is_imperial:
+            temp = (temp - 32) * 5 / 9  # convert °F → °C for the API
         await self.hass.async_add_executor_job(
             self._send_climatization_command, "start", temp
         )

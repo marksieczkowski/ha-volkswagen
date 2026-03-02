@@ -17,10 +17,13 @@ from .const import (
     CONF_SCAN_INTERVAL,
     CONF_SELECTED_VINS,
     CONF_SPIN,
+    CONF_UNIT_SYSTEM,
     CONF_USERNAME,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_UNIT_SYSTEM,
     DOMAIN,
     TOKENSTORE_FILENAME_TEMPLATE,
+    UNIT_SYSTEM_IMPERIAL,
 )
 
 if TYPE_CHECKING:
@@ -136,6 +139,19 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(
                 f"Error communicating with Volkswagen API: {err}"
             ) from err
+
+    @property
+    def is_imperial(self) -> bool:
+        """Return True if imperial units are configured.
+
+        Options take precedence over data (options flow overwrites options,
+        not data; data holds the original setup values).
+        """
+        unit_system = self.config_entry.options.get(
+            CONF_UNIT_SYSTEM,
+            self.config_entry.data.get(CONF_UNIT_SYSTEM, DEFAULT_UNIT_SYSTEM),
+        )
+        return unit_system == UNIT_SYSTEM_IMPERIAL
 
     def get_vehicles(self) -> list:
         """Return vehicles, optionally filtered to the user's selected VINs."""

@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN
+from .const import CONF_UNIT_SYSTEM, DOMAIN
 from .coordinator import VolkswagenDataUpdateCoordinator
 
 if TYPE_CHECKING:
@@ -27,6 +28,17 @@ PLATFORMS: list[Platform] = [
 ]
 
 
+async def _async_update_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options updates — clear cached sensor units then reload."""
+    registry = er.async_get(hass)
+    for entity_entry in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if "sensor.private" in entity_entry.options:
+            registry.async_update_entity_options(
+                entity_entry.entity_id, "sensor.private", None
+            )
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volkswagen integration from a config entry."""
     coordinator = VolkswagenDataUpdateCoordinator(hass, entry)
@@ -43,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(_async_update_entry))
 
     return True
 

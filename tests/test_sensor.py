@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from custom_components.ha_volkswagen.sensor import (
+    _IMPERIAL_UNIT_MAP,
     SENSOR_DESCRIPTIONS,
     VolkswagenSensor,
 )
@@ -31,10 +32,15 @@ def _make_sensor(vehicle, key: str, coordinator=None) -> VolkswagenSensor:
     if coordinator is None:
         coordinator = MagicMock()
         coordinator.data = make_mock_garage([vehicle])
+        coordinator.is_imperial = False
     sensor = VolkswagenSensor.__new__(VolkswagenSensor)
     sensor._vehicle = vehicle
     sensor.entity_description = description
     sensor.coordinator = coordinator
+    # Replicate the __init__ suggested-unit logic so tests reflect real behaviour.
+    base_unit = description.native_unit_of_measurement
+    if coordinator.is_imperial and base_unit in _IMPERIAL_UNIT_MAP:
+        sensor._attr_suggested_unit_of_measurement = _IMPERIAL_UNIT_MAP[base_unit]
     return sensor
 
 
@@ -197,3 +203,60 @@ def test_odometer_supported_for_all_types():
     """Odometer should have a supported_fn that returns True for any vehicle."""
     desc = _get_description("odometer")
     assert desc.supported_fn(MagicMock())
+
+
+# ---------------------------------------------------------------------------
+# Imperial unit conversion
+# ---------------------------------------------------------------------------
+
+
+def _make_imperial_coordinator(vehicle):
+    coordinator = MagicMock()
+    coordinator.data = make_mock_garage([vehicle])
+    coordinator.is_imperial = True
+    return coordinator
+
+
+def test_ev_range_imperial_suggests_miles():
+    """In imperial mode native_value stays in km; HA auto-converts via suggested unit."""
+    vehicle = make_mock_electric_vehicle()
+    electric_drive = MagicMock()
+    electric_drive.range = _make_attr(100.0)
+    vehicle.get_electric_drive.return_value = electric_drive
+    sensor = _make_sensor(vehicle, "ev_range", _make_imperial_coordinator(vehicle))
+    # native_value is still km — HA does the km→mi conversion using suggested unit
+    assert sensor.native_value == 100.0
+    from homeassistant.const import UnitOfLength
+    assert sensor._attr_suggested_unit_of_measurement == UnitOfLength.MILES
+    # native_unit_of_measurement comes from description (always km)
+    assert sensor.entity_description.native_unit_of_measurement == UnitOfLength.KILOMETERS
+
+
+def test_outside_temperature_imperial_suggests_fahrenheit():
+    vehicle = make_mock_electric_vehicle()
+    vehicle.outside_temperature = _make_attr(0.0)
+    sensor = _make_sensor(vehicle, "outside_temperature", _make_imperial_coordinator(vehicle))
+    # native_value is still °C
+    assert sensor.native_value == 0.0
+    from homeassistant.const import UnitOfTemperature
+    assert sensor._attr_suggested_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
+
+
+def test_charge_rate_imperial_suggests_mph():
+    vehicle = make_mock_electric_vehicle()
+    vehicle.charging.rate = _make_attr(100.0)
+    sensor = _make_sensor(vehicle, "charge_rate", _make_imperial_coordinator(vehicle))
+    assert sensor.native_value == 100.0
+    from homeassistant.const import UnitOfSpeed
+    assert sensor._attr_suggested_unit_of_measurement == UnitOfSpeed.MILES_PER_HOUR
+
+
+def test_metric_sensor_units_unchanged_for_non_convertible():
+    """Sensors without a convertible unit (e.g. battery_soc) get no suggested unit."""
+    vehicle = make_mock_electric_vehicle()
+    electric_drive = MagicMock()
+    electric_drive.level = _make_attr(80)
+    vehicle.get_electric_drive.return_value = electric_drive
+    sensor = _make_sensor(vehicle, "battery_soc", _make_imperial_coordinator(vehicle))
+    assert sensor.native_value == 80
+    assert not hasattr(sensor, "_attr_suggested_unit_of_measurement")

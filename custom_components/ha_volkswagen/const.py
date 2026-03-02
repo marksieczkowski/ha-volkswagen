@@ -27,5 +27,11 @@ MIN_SCAN_INTERVAL = 180  # carconnectivity NA API enforced minimum (3 minutes)
 DEFAULT_COUNTRY = "us"
 SUPPORTED_COUNTRIES = ["us", "ca"]
 
+# Unit system
+CONF_UNIT_SYSTEM = "unit_system"
+UNIT_SYSTEM_METRIC = "metric"
+UNIT_SYSTEM_IMPERIAL = "imperial"
+DEFAULT_UNIT_SYSTEM = "imperial"  # North America default
+
 # Tokenstore filename template — stored in hass.config.config_dir/.storage/
 TOKENSTORE_FILENAME_TEMPLATE = "ha_volkswagen_{entry_id}_tokenstore"

@@ -28,6 +28,12 @@ from homeassistant.const import (
 from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
+_IMPERIAL_UNIT_MAP: dict[str, str] = {
+    UnitOfLength.KILOMETERS: UnitOfLength.MILES,
+    UnitOfSpeed.KILOMETERS_PER_HOUR: UnitOfSpeed.MILES_PER_HOUR,
+    UnitOfTemperature.CELSIUS: UnitOfTemperature.FAHRENHEIT,
+}
+
 if TYPE_CHECKING:
     from collections.abc import Callable
 
@@ -277,6 +283,12 @@ class VolkswagenSensor(VolkswagenBaseEntity, SensorEntity):
         super().__init__(coordinator, vehicle)
         self.entity_description = description
         self._attr_unique_id = f"{vehicle.vin.value}_{description.key}"
+        # Tell HA which unit to display — HA's built-in converter handles the math.
+        # This is consumed by add_to_platform_start on first registration to populate
+        # sensor.private.suggested_unit_of_measurement in the entity registry.
+        base_unit = description.native_unit_of_measurement
+        if coordinator.is_imperial and base_unit in _IMPERIAL_UNIT_MAP:
+            self._attr_suggested_unit_of_measurement = _IMPERIAL_UNIT_MAP[base_unit]
 
     @property
     def native_value(self) -> Any:
