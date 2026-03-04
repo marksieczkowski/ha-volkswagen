@@ -4,7 +4,8 @@ default_config:
 # https://www.home-assistant.io/integrations/homeassistant/
 homeassistant:
   debug: true
-  unit_system: imperial
+  unit_system: us_customary
+  temperature_unit: F
 
 # https://www.home-assistant.io/integrations/logger/
 logger:
