@@ -92,6 +92,7 @@ def make_mock_electric_vehicle(
     # Windows
     vehicle.windows = MagicMock()
     vehicle.windows.open_state = _make_enum_attr("closed")
+    vehicle.windows.windows = {}
 
     # Lights
     vehicle.lights = MagicMock()

@@ -53,6 +53,15 @@ def _door_open(vehicle: GenericVehicle, door_key: str) -> bool | None:
     return door.open_state.value == Doors.OpenState.OPEN
 
 
+def _window_open(vehicle: GenericVehicle, window_key: str) -> bool | None:
+    """Return True if a specific window is open or ajar."""
+    windows_dict = vehicle.windows.windows
+    window = windows_dict.get(window_key)
+    if window is None or not window.open_state.enabled:
+        return None
+    return window.open_state.value != Windows.OpenState.CLOSED
+
+
 BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
     # Overall door lock — True means UNLOCKED (HA LOCK device class convention)
     VolkswagenBinarySensorDescription(
@@ -111,6 +120,35 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
             if v.windows.open_state.enabled
             else None
         ),
+    ),
+    # Individual window open states
+    VolkswagenBinarySensorDescription(
+        key="window_front_left",
+        translation_key="window_front_left",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_registry_enabled_default=False,
+        value_fn=lambda v: _window_open(v, "frontLeft"),
+    ),
+    VolkswagenBinarySensorDescription(
+        key="window_front_right",
+        translation_key="window_front_right",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_registry_enabled_default=False,
+        value_fn=lambda v: _window_open(v, "frontRight"),
+    ),
+    VolkswagenBinarySensorDescription(
+        key="window_rear_left",
+        translation_key="window_rear_left",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_registry_enabled_default=False,
+        value_fn=lambda v: _window_open(v, "rearLeft"),
+    ),
+    VolkswagenBinarySensorDescription(
+        key="window_rear_right",
+        translation_key="window_rear_right",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        entity_registry_enabled_default=False,
+        value_fn=lambda v: _window_open(v, "rearRight"),
     ),
     # Exterior lights
     VolkswagenBinarySensorDescription(

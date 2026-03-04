@@ -83,6 +83,10 @@ class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
         if pos is None:
             return attrs
 
+        if pos.latitude.enabled and pos.longitude.enabled:
+            attrs["latitude"] = pos.latitude.value
+            attrs["longitude"] = pos.longitude.value
+
         if pos.position_type.enabled:
             attrs["position_type"] = pos.position_type.value.value
 

@@ -48,7 +48,7 @@ async def test_async_setup_creates_car_connectivity(
     await coordinator.async_setup()
 
     assert coordinator.car_connectivity is mock_carconnectivity
-    mock_carconnectivity.startup.assert_called_once()
+    mock_carconnectivity.startup.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -173,5 +173,6 @@ async def test_shutdown_calls_car_connectivity_shutdown(
 
     await coordinator.async_shutdown()
 
-    mock_carconnectivity.shutdown.assert_called_once()
+    mock_carconnectivity.persist.assert_called_once()
+    mock_carconnectivity.shutdown.assert_not_called()
     assert coordinator.car_connectivity is None
