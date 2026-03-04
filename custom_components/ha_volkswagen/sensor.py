@@ -144,9 +144,9 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         entity_registry_enabled_default=False,
-        value_fn=lambda v: v.outside_temperature.value
-        if v.outside_temperature.enabled
-        else None,
+        value_fn=lambda v: (
+            v.outside_temperature.value if v.outside_temperature.enabled else None
+        ),
     ),
     VolkswagenSensorDescription(
         key="charge_power",
