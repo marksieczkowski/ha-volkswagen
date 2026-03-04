@@ -1,0 +1,90 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Volkswagen (North America)",
+        "description": "Enter your MyVW account credentials. A minimum poll interval of 180 seconds is enforced by the Volkswagen API.",
+        "data": {
+          "username": "Email address",
+          "password": "Password",
+          "country": "Country",
+          "scan_interval": "Poll interval (seconds)",
+          "unit_system": "Unit system",
+          "spin": "S-PIN (optional — required for some remote commands)"
+        }
+      },
+      "select_vehicle": {
+        "title": "Select vehicles to monitor",
+        "description": "Choose which vehicles from your MyVW account to add to Home Assistant.",
+        "data": {
+          "selected_vins": "Vehicles"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Volkswagen API. Check your network and try again.",
+      "invalid_auth": "Invalid credentials. Please check your MyVW email address and password.",
+      "unknown": "Unexpected error. Check the Home Assistant logs for details."
+    },
+    "abort": {
+      "already_configured": "This Volkswagen account is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Volkswagen options",
+        "data": {
+          "scan_interval": "Poll interval (seconds, minimum 180)",
+          "unit_system": "Unit system"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "odometer": {"name": "Odometer"},
+      "battery_soc": {"name": "Battery Level"},
+      "ev_range": {"name": "Electric Range"},
+      "fuel_level": {"name": "Fuel Level"},
+      "fuel_range": {"name": "Fuel Range"},
+      "outside_temperature": {"name": "Outside Temperature"},
+      "charge_power": {"name": "Charge Power"},
+      "charge_rate": {"name": "Charge Rate"},
+      "charging_state": {"name": "Charging State"},
+      "inspection_due_at": {"name": "Next Inspection"},
+      "inspection_due_after": {"name": "Distance to Inspection"},
+      "oil_service_due_at": {"name": "Next Oil Service"},
+      "oil_service_due_after": {"name": "Distance to Oil Service"}
+    },
+    "binary_sensor": {
+      "doors_locked": {"name": "Doors"},
+      "door_front_left": {"name": "Front Left Door"},
+      "door_front_right": {"name": "Front Right Door"},
+      "door_rear_left": {"name": "Rear Left Door"},
+      "door_rear_right": {"name": "Rear Right Door"},
+      "trunk": {"name": "Trunk"},
+      "windows_open": {"name": "Windows"},
+      "window_front_left": {"name": "Front Left Window"},
+      "window_front_right": {"name": "Front Right Window"},
+      "window_rear_left": {"name": "Rear Left Window"},
+      "window_rear_right": {"name": "Rear Right Window"},
+      "lights_on": {"name": "Exterior Lights"},
+      "charging_connected": {"name": "Charging Cable"},
+      "charging_active": {"name": "Charging"},
+      "vehicle_online": {"name": "Connected"}
+    },
+    "device_tracker": {
+      "position": {"name": "Location"}
+    },
+    "lock": {
+      "doors": {"name": "Doors"}
+    },
+    "climate": {
+      "climatization": {"name": "Climatization"}
+    },
+    "switch": {
+      "charging": {"name": "Charging"}
+    }
+  }
+}

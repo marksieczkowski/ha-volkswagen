@@ -1,0 +1,70 @@
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+    "-v",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-report=html",
+]
+markers = [
+    "asyncio: marks tests as async",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]  # Allow assert statements
+
+[tool.interrogate]
+ignore-init-method = true
+ignore-init-module = true
+ignore-magic = false
+ignore-semiprivate = false
+ignore-private = false
+ignore-property-decorators = false
+ignore-module = false
+ignore-nested-functions = false
+ignore-nested-classes = true
+ignore-setters = false
+fail-under = 80
+exclude = ["setup.py", "docs", "build", "tests"]
+ignore-regex = ["^get$", "^mock_.*", ".*BaseClass.*"]
+verbose = 0
+quiet = false
+whitelist-regex = []
+color = true
+omit-covered-files = false
+
+[tool.pydocstyle]
+inherit = false
+ignore = ["D203", "D213"]  # Conflicts with D211 and D212
+match-dir = "custom_components"
+
+[tool.vulture]
+exclude = ["tests/", "docs/"]
+ignore_decorators = ["@app.route", "@require_*"]
+ignore_names = ["_*"]
+make_whitelist = true
+min_confidence = 60
+paths = ["custom_components/"]
+sort_by_size = true
+verbose = false
+
+[tool.pyright]
+venv_path = "."
+venv = ".venv"
+python_version = "3.13"
+python_platform = "Darwin"
+type_checking_mode = "basic"
+report_missing_imports = true
+report_missing_type_stubs = false
