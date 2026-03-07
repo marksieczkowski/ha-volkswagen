@@ -168,7 +168,7 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
             await self.hass.async_add_executor_job(
                 self._send_climatization_command, "start", target_celsius
             )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature (starts climatization if off)."""
@@ -180,4 +180,4 @@ class VolkswagenClimate(VolkswagenBaseEntity, ClimateEntity):
         await self.hass.async_add_executor_job(
             self._send_climatization_command, "start", temp
         )
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
