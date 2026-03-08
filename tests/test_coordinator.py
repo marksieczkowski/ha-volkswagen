@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -155,6 +155,33 @@ async def test_get_vehicles_returns_empty_when_no_data(hass, config_entry):
     coordinator.data = None
 
     assert coordinator.get_vehicles() == []
+
+
+# ---------------------------------------------------------------------------
+# async_refresh_after_command
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_async_refresh_after_command_schedules_tasks(
+    hass, mock_carconnectivity, config_entry
+):
+    """Should refresh immediately and schedule 3 delayed tasks."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+    coordinator.data = MagicMock()
+
+    with (
+        patch.object(
+            coordinator, "async_request_refresh", new_callable=AsyncMock
+        ) as mock_refresh,
+        patch.object(hass, "async_create_task") as mock_create_task,
+    ):
+        await coordinator.async_refresh_after_command()
+
+    mock_refresh.assert_called_once()
+    assert mock_create_task.call_count == 3
 
 
 # ---------------------------------------------------------------------------

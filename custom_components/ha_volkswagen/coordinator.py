@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from datetime import timedelta
@@ -162,6 +163,19 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         if not selected:
             return all_vehicles
         return [v for v in all_vehicles if v.vin.value in selected]
+
+    async def async_refresh_after_command(self) -> None:
+        """Schedule refreshes at 20 s, 60 s, and 120 s after a command.
+
+        The VW NA API typically takes 15-60 s to reflect a command result, so an
+        immediate refresh would return stale data and cause state churn in HA.
+        """
+        for delay in (20, 60, 120):
+            self.hass.async_create_task(self._delayed_refresh(delay))
+
+    async def _delayed_refresh(self, delay: int) -> None:
+        await asyncio.sleep(delay)
+        await self.async_request_refresh()
 
     async def async_shutdown(self) -> None:
         """Persist tokens and release the CarConnectivity instance."""

@@ -82,12 +82,12 @@ class VolkswagenLock(VolkswagenBaseEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the vehicle doors."""
         await self.hass.async_add_executor_job(self._send_lock_command, "lock")
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the vehicle doors."""
         await self.hass.async_add_executor_job(self._send_lock_command, "unlock")
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

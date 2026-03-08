@@ -93,12 +93,12 @@ class VolkswagenChargingSwitch(VolkswagenBaseEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start charging."""
         await self.hass.async_add_executor_job(self._send_charging_command, "start")
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop charging."""
         await self.hass.async_add_executor_job(self._send_charging_command, "stop")
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_refresh_after_command()
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
