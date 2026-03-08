@@ -165,12 +165,11 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         return [v for v in all_vehicles if v.vin.value in selected]
 
     async def async_refresh_after_command(self) -> None:
-        """Refresh immediately after a command, then follow up at 20 s, 60 s, and 120 s.
+        """Schedule refreshes at 20 s, 60 s, and 120 s after a command.
 
-        The VW NA API typically takes 15-60 s to reflect a command result.
-        Immediate refresh picks up fast responses; follow-ups catch slow changes.
+        The VW NA API typically takes 15-60 s to reflect a command result, so an
+        immediate refresh would return stale data and cause state churn in HA.
         """
-        await self.async_request_refresh()
         for delay in (20, 60, 120):
             self.hass.async_create_task(self._delayed_refresh(delay))
 
