@@ -4,7 +4,7 @@ ruff==0.15.4
 debugpy==1.8.20
 pytest==9.0.0
 pytest-cov==7.0.0
-homeassistant==2026.4.4
+homeassistant==2026.2.3
 pytest-homeassistant-custom-component==0.13.316
 bandit[toml]==1.9.4
 yamllint==1.38.0
