@@ -7,8 +7,8 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/marksieczkowski/ha-volkswagen/issues",
   "requirements": [
-    "carconnectivity==0.11.8",
-    "carconnectivity-connector-volkswagen-na==0.1.16"
+    "carconnectivity==0.11.9",
+    "carconnectivity-connector-volkswagen-na==0.1.18"
   ],
-  "version": "0.1.2"
+  "version": "0.1.3"
 }
