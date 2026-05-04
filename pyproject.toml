@@ -63,7 +63,7 @@ verbose = false
 [tool.pyright]
 venv_path = "."
 venv = ".venv"
-python_version = "3.13"
+python_version = "3.14"
 python_platform = "Darwin"
 type_checking_mode = "basic"
 report_missing_imports = true
