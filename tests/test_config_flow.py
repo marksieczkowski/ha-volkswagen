@@ -15,6 +15,7 @@ from custom_components.ha_volkswagen.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_SELECTED_VINS,
+    CONF_SPIN,
     CONF_USERNAME,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -263,3 +264,32 @@ async def test_options_flow_updates_scan_interval(hass):
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SCAN_INTERVAL] == 600
+
+
+@pytest.mark.asyncio
+async def test_options_flow_sets_spin(hass):
+    """The S-PIN can be added after initial setup via the options flow."""
+    with _patch_connect():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_STEP_USER_INPUT
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=_STEP_SELECT_INPUT
+        )
+
+    entry = result["result"]
+    # Initial setup did not include an S-PIN
+    assert not entry.data.get(CONF_SPIN)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL, CONF_SPIN: "1234"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SPIN] == "1234"
+    assert entry.options[CONF_SPIN] == "1234"

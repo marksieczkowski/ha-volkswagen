@@ -12,7 +12,10 @@ from custom_components.ha_volkswagen.const import (
     CONF_SELECTED_VINS,
     DOMAIN,
 )
-from custom_components.ha_volkswagen.coordinator import VolkswagenDataUpdateCoordinator
+from custom_components.ha_volkswagen.coordinator import (
+    VolkswagenDataUpdateCoordinator,
+    build_carconnectivity_config,
+)
 
 from .conftest import (
     CONFIG_ENTRY_DATA,
@@ -74,6 +77,25 @@ async def test_options_scan_interval_passed_to_connector_config(
 
     merged = mock_build.call_args[0][0]
     assert merged["scan_interval"] == 600
+
+
+# ---------------------------------------------------------------------------
+# build_carconnectivity_config — S-PIN handling
+# ---------------------------------------------------------------------------
+
+
+def test_build_config_includes_spin():
+    """A configured S-PIN must be passed to the connector."""
+    config = build_carconnectivity_config({**CONFIG_ENTRY_DATA, "spin": "1234"})
+    connector_config = config["carConnectivity"]["connectors"][0]["config"]
+    assert connector_config["spin"] == "1234"
+
+
+def test_build_config_omits_empty_spin():
+    """Clearing the S-PIN (empty string) must remove it from the connector config."""
+    config = build_carconnectivity_config({**CONFIG_ENTRY_DATA, "spin": ""})
+    connector_config = config["carConnectivity"]["connectors"][0]["config"]
+    assert "spin" not in connector_config
 
 
 # ---------------------------------------------------------------------------

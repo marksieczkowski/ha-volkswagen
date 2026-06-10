@@ -10,5 +10,5 @@
     "carconnectivity==0.11.9",
     "carconnectivity-connector-volkswagen-na==0.1.21"
   ],
-  "version": "0.1.4"
+  "version": "0.1.5"
 }

@@ -286,6 +286,7 @@ class VolkswagenOptionsFlow(OptionsFlow):
         merged = {**self.config_entry.data, **self.config_entry.options}
         current_interval = merged.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         current_unit_system = merged.get(CONF_UNIT_SYSTEM, DEFAULT_UNIT_SYSTEM)
+        current_spin = merged.get(CONF_SPIN, "")
         schema = vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
@@ -308,6 +309,9 @@ class VolkswagenOptionsFlow(OptionsFlow):
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
+                # VW requires the S-PIN token for privileged commands (lock/unlock,
+                # changing climatization settings) — without it those return 403.
+                vol.Optional(CONF_SPIN, default=current_spin): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
