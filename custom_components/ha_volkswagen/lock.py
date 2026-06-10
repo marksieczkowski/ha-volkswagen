@@ -8,16 +8,14 @@ from typing import TYPE_CHECKING, Any
 from carconnectivity.doors import Doors
 from homeassistant.components.lock import LockEntity
 
-from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import VolkswagenDataUpdateCoordinator
+    from .coordinator import VolkswagenConfigEntry, VolkswagenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,11 +34,11 @@ def _supports_lock(vehicle: GenericVehicle) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkswagenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Volkswagen lock entities."""
-    coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         VolkswagenLock(coordinator, vehicle)

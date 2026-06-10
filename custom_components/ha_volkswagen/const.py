@@ -4,15 +4,6 @@ from __future__ import annotations
 
 DOMAIN = "ha_volkswagen"
 
-PLATFORMS = [
-    "sensor",
-    "binary_sensor",
-    "device_tracker",
-    "lock",
-    "climate",
-    "switch",
-]
-
 # Config entry data keys
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"  # nosec B105 — config-entry key, not a hardcoded credential

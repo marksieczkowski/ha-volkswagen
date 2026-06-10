@@ -8,27 +8,25 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 
-from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import VolkswagenDataUpdateCoordinator
+    from .coordinator import VolkswagenConfigEntry, VolkswagenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkswagenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Volkswagen device tracker entities."""
-    coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         VolkswagenDeviceTracker(coordinator, vehicle)
@@ -82,10 +80,6 @@ class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
         pos = self._vehicle.position
         if pos is None:
             return attrs
-
-        if pos.latitude.enabled and pos.longitude.enabled:
-            attrs["latitude"] = pos.latitude.value
-            attrs["longitude"] = pos.longitude.value
 
         if pos.position_type.enabled:
             attrs["position_type"] = pos.position_type.value.value

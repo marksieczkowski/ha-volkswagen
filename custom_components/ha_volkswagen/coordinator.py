@@ -32,6 +32,8 @@ if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
 
+    type VolkswagenConfigEntry = ConfigEntry[VolkswagenDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -67,14 +69,17 @@ def get_tokenstore_path(config_dir: str, entry_id: str) -> str:
     return os.path.join(storage_dir, filename)
 
 
-class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
+class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator["Garage"]):
     """Coordinator that owns a CarConnectivity instance and drives polling."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialise the coordinator."""
         self.car_connectivity: cc.CarConnectivity | None = None
 
-        scan_interval = config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        # Options (set via the options flow) take precedence over the original
+        # setup data — otherwise changing the poll interval would have no effect.
+        merged = {**config_entry.data, **config_entry.options}
+        scan_interval = merged.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         # Pass config_entry to the parent so self.config_entry is set correctly
         # (DataUpdateCoordinator sets self.config_entry = config_entry internally)
         super().__init__(
@@ -91,7 +96,9 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         Must be awaited once before async_config_entry_first_refresh().
         Runs blocking I/O in the executor.
         """
-        config_dict = build_carconnectivity_config(self.config_entry.data)
+        config_dict = build_carconnectivity_config(
+            {**self.config_entry.data, **self.config_entry.options}
+        )
         tokenstore_path = get_tokenstore_path(
             self.hass.config.config_dir, self.config_entry.entry_id
         )
@@ -171,7 +178,12 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator):
         immediate refresh would return stale data and cause state churn in HA.
         """
         for delay in (20, 60, 120):
-            self.hass.async_create_task(self._delayed_refresh(delay))
+            # Background tasks tied to the config entry are cancelled on unload.
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._delayed_refresh(delay),
+                name=f"{DOMAIN}_refresh_after_command_{delay}s",
+            )
 
     async def _delayed_refresh(self, delay: int) -> None:
         await asyncio.sleep(delay)

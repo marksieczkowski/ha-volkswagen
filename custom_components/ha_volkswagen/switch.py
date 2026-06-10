@@ -11,16 +11,14 @@ from carconnectivity_connectors.volkswagen_na.vehicle import (
 )
 from homeassistant.components.switch import SwitchEntity
 
-from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from carconnectivity.vehicle import GenericVehicle
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import VolkswagenDataUpdateCoordinator
+    from .coordinator import VolkswagenConfigEntry, VolkswagenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,15 +35,16 @@ _CHARGING_STATE_STRINGS = {
     "chargepurposereachedandnotconservationcharging",
     "chargepurposereachedandconservation",
 }
+_CHARGING_ON_STATES = {s.replace("_", "") for s in _CHARGING_STATE_STRINGS}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkswagenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Volkswagen charging switch entities (EV / hybrid only)."""
-    coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         VolkswagenChargingSwitch(coordinator, vehicle)
@@ -77,9 +76,7 @@ class VolkswagenChargingSwitch(VolkswagenBaseEntity, SwitchEntity):
             return None
         # .value is an enum; .value.value (or str()) gives the canonical string
         state_str = getattr(state_attr.value, "value", str(state_attr.value))
-        return state_str.lower().replace("_", "") in {
-            s.replace("_", "") for s in _CHARGING_STATE_STRINGS
-        }
+        return state_str.lower().replace("_", "") in _CHARGING_ON_STATES
 
     def _send_charging_command(self, command: str) -> None:
         """Send charge start/stop command. Runs in executor thread."""

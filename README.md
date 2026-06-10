@@ -58,6 +58,8 @@ The integration creates the following entities per vehicle. Entities marked with
 |--------|-------------|--------------|
 | Climatization | Remote cabin pre-conditioning with target temperature control | EV / Hybrid only |
 
+Turning the climate entity on or off starts or stops pre-conditioning. Changing the target temperature updates the vehicle's pre-conditioning setting (the same one shown in the MyVW app) without starting climatization — turn the entity on to start it. The adjustable range comes from the vehicle when available.
+
 ### Lock
 
 | Entity | Description | Availability |
@@ -103,6 +105,14 @@ Now you can finally add the integration to your Home Assistant
 ![image](./docs/images/config_flow_2.png)
 
 Done.
+
+### Options
+
+After setup you can change the poll interval and the unit system (imperial/metric) at any time: go to "Settings" → "Devices & services" → "Volkswagen (North America)" and click "Configure". The Volkswagen API enforces a minimum poll interval of 180 seconds.
+
+### Reauthentication
+
+If your MyVW password changes or VW invalidates the stored tokens, Home Assistant will show a "Reauthentication required" notification for the integration. Click it and enter your current MyVW password to reconnect — your vehicles and settings are kept.
 
 ## Removal
 

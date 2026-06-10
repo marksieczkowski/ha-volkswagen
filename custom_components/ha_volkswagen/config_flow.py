@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from carconnectivity import carconnectivity as cc
@@ -41,6 +41,9 @@ from .const import (
 )
 from .coordinator import build_carconnectivity_config, get_tokenstore_path
 
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
@@ -73,6 +76,25 @@ STEP_USER_SCHEMA = vol.Schema(
         vol.Optional(CONF_SPIN): str,
     }
 )
+
+
+def _classify_connect_error(err: Exception) -> str:
+    """Map a connection exception to a config-flow error key."""
+    err_str = str(err).lower()
+    # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means the
+    # account is rate-limited. Treat as cannot_connect so the user knows to
+    # wait and retry rather than change their password.
+    if any(
+        word in err_str
+        for word in ("invalid_request", "bad_request", "rate", "too many")
+    ):
+        return "cannot_connect"
+    if any(
+        word in err_str
+        for word in ("unauthorized", "401", "403", "credential", "password")
+    ):
+        return "invalid_auth"
+    return "cannot_connect"
 
 
 def _try_connect(config_dict: dict, tokenstore_path: str | None = None) -> list:
@@ -145,24 +167,8 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
                     _try_connect, config_dict, tokenstore_path
                 )
             except Exception as err:
-                err_str = str(err).lower()
                 _LOGGER.debug("Connection attempt failed: %s", err)
-                # INVALID_REQUEST / BAD_REQUEST from VW's auth server usually means the
-                # account is rate-limited. Treat as cannot_connect so the user knows to
-                # wait and retry rather than change their password.
-                if any(
-                    word in err_str
-                    for word in ("invalid_request", "bad_request", "rate", "too many")
-                ):
-                    errors["base"] = "cannot_connect"
-                elif any(
-                    word in err_str
-                    for word in ("unauthorized", "401", "403", "credential", "password")
-                ):
-                    errors["base"] = "invalid_auth"
-                else:
-                    _LOGGER.exception("Unexpected error connecting to Volkswagen API")
-                    errors["base"] = "cannot_connect"
+                errors["base"] = _classify_connect_error(err)
             else:
                 self._user_input = user_input
                 self._discovered_vehicles = vehicles
@@ -211,6 +217,48 @@ class VolkswagenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="select_vehicle", data_schema=schema)
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication when the stored credentials stop working."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for a new password and validate it."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            data = {**reauth_entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
+            config_dict = build_carconnectivity_config(data)
+            # Reuse the entry's tokenstore — same path the coordinator uses.
+            tokenstore_path = get_tokenstore_path(
+                self.hass.config.config_dir, reauth_entry.entry_id
+            )
+            try:
+                await self.hass.async_add_executor_job(
+                    _try_connect, config_dict, tokenstore_path
+                )
+            except Exception as err:
+                _LOGGER.debug("Reauthentication attempt failed: %s", err)
+                errors["base"] = _classify_connect_error(err)
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            description_placeholders={
+                "username": reauth_entry.data[CONF_USERNAME],
+            },
+            errors=errors,
+        )
+
     def _create_entry(self, selected_vins: list[str]) -> ConfigFlowResult:
         """Create the config entry."""
         data = {**self._user_input, CONF_SELECTED_VINS: selected_vins}
@@ -234,12 +282,10 @@ class VolkswagenOptionsFlow(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        current_interval = self.config_entry.data.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-        current_unit_system = self.config_entry.data.get(
-            CONF_UNIT_SYSTEM, DEFAULT_UNIT_SYSTEM
-        )
+        # Options take precedence over the original setup data
+        merged = {**self.config_entry.data, **self.config_entry.options}
+        current_interval = merged.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        current_unit_system = merged.get(CONF_UNIT_SYSTEM, DEFAULT_UNIT_SYSTEM)
         schema = vol.Schema(
             {
                 vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(

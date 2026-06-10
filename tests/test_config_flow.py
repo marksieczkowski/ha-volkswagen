@@ -8,6 +8,7 @@ from unittest.mock import patch
 import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.ha_volkswagen.const import (
     CONF_COUNTRY,
@@ -172,6 +173,63 @@ async def test_duplicate_entry_aborts(hass):
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+# ---------------------------------------------------------------------------
+# Reauth flow
+# ---------------------------------------------------------------------------
+
+
+def _make_configured_entry(hass) -> MockConfigEntry:
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**_STEP_USER_INPUT, CONF_SELECTED_VINS: [TEST_VIN]},
+        unique_id=f"{TEST_USERNAME}_{TEST_COUNTRY}",
+        entry_id="test_entry_id",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.mark.asyncio
+async def test_reauth_flow_updates_password(hass):
+    """A successful reauth should update the stored password and reload."""
+    entry = _make_configured_entry(hass)
+
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    with _patch_connect():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new-password"
+    # Username and selections must be preserved
+    assert entry.data[CONF_USERNAME] == TEST_USERNAME
+    assert entry.data[CONF_SELECTED_VINS] == [TEST_VIN]
+
+
+@pytest.mark.asyncio
+async def test_reauth_flow_invalid_password_shows_error(hass):
+    """A rejected password should re-show the form with invalid_auth."""
+    entry = _make_configured_entry(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with _patch_connect(raises=Exception("401 Unauthorized")):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PASSWORD: "wrong-password"}
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"]["base"] == "invalid_auth"
+    # The stored password must be untouched
+    assert entry.data[CONF_PASSWORD] == TEST_PASSWORD
 
 
 # ---------------------------------------------------------------------------

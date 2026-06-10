@@ -19,6 +19,13 @@
         "data": {
           "selected_vins": "Vehicles"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate with MyVW",
+        "description": "The stored credentials for {username} no longer work. Enter your current MyVW password.",
+        "data": {
+          "password": "Password"
+        }
       }
     },
     "error": {
@@ -27,7 +34,8 @@
       "unknown": "Unexpected error. Check the Home Assistant logs for details."
     },
     "abort": {
-      "already_configured": "This Volkswagen account is already configured."
+      "already_configured": "This Volkswagen account is already configured.",
+      "reauth_successful": "Reauthentication was successful."
     }
   },
   "options": {

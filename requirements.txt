@@ -2,10 +2,10 @@ colorlog==6.10.1
 pip==26.0.1
 ruff==0.15.4
 debugpy==1.8.20
-pytest==9.0.0
-pytest-cov==7.0.0
-homeassistant==2026.4.4
-pytest-homeassistant-custom-component==0.13.325
+pytest==9.0.3
+pytest-cov==7.1.0
+homeassistant==2026.5.4
+pytest-homeassistant-custom-component==0.13.333
 bandit[toml]==1.9.4
 yamllint==1.38.0
 pre-commit==4.5.1
@@ -15,4 +15,4 @@ vulture==2.14
 pydocstyle==6.3.0
 commitizen==4.13.9
 carconnectivity==0.11.9
-carconnectivity-connector-volkswagen-na==0.1.18
+carconnectivity-connector-volkswagen-na==0.1.21

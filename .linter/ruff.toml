@@ -24,6 +24,7 @@ ignore = [
     "PTH103",  # os.makedirs — pathlib migration not required
     "PTH123",  # open() — pathlib migration not required
     "PTH112",  # os.path.isdir — pathlib migration not required
+    "ARG001",  # Unused function argument — HA platform setup signatures must be matched
     "ARG002",  # Unused method argument — HA base-class signatures must be matched
     "ARG004",  # Unused static method argument — same reason
     "RUF012",  # Mutable ClassVar annotation — common HA entity class pattern
@@ -61,7 +62,8 @@ max-complexity = 25
     "ERA001",  # Found commented-out code - TODO comments normal in tests
     "PLC0415", # Import not at top of file - some imports inside test functions for scoping
 ]
-"custom_components/ha_volkswagen/run.py" = [
+"scripts/run.py" = [
+    "INP001", # implicit namespace package - standalone script, not a package
     "T201",  # print() - standalone dev/diagnostic script
     "D100",  # Missing module docstring
     "D400",  # Docstring should end with period

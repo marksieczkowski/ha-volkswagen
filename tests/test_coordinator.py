@@ -33,6 +33,50 @@ def config_entry() -> MockConfigEntry:
 
 
 # ---------------------------------------------------------------------------
+# scan interval — options must take precedence over original setup data
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_scan_interval_from_options_overrides_data(hass):
+    """An interval changed via the options flow must be applied."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_DATA, "scan_interval": 300},
+        options={"scan_interval": 600},
+        entry_id="test_entry_id",
+    )
+    entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, entry)
+
+    assert coordinator.update_interval is not None
+    assert coordinator.update_interval.total_seconds() == 600
+
+
+@pytest.mark.asyncio
+async def test_options_scan_interval_passed_to_connector_config(
+    hass, mock_carconnectivity
+):
+    """build_carconnectivity_config must see the options-flow interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**CONFIG_ENTRY_DATA, "scan_interval": 300},
+        options={"scan_interval": 600},
+        entry_id="test_entry_id",
+    )
+    entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, entry)
+
+    with patch(
+        "custom_components.ha_volkswagen.coordinator.build_carconnectivity_config"
+    ) as mock_build:
+        await coordinator.async_setup()
+
+    merged = mock_build.call_args[0][0]
+    assert merged["scan_interval"] == 600
+
+
+# ---------------------------------------------------------------------------
 # async_setup
 # ---------------------------------------------------------------------------
 
@@ -166,22 +210,47 @@ async def test_get_vehicles_returns_empty_when_no_data(hass, config_entry):
 async def test_async_refresh_after_command_schedules_tasks(
     hass, mock_carconnectivity, config_entry
 ):
-    """Should refresh immediately and schedule 3 delayed tasks."""
+    """Should schedule 3 tracked background refresh tasks on the config entry."""
     config_entry.add_to_hass(hass)
     coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
     coordinator.car_connectivity = mock_carconnectivity
     coordinator.data = MagicMock()
 
+    scheduled = []
+
+    def _fake_background_task(hass_arg, coro, name=None, **kwargs):
+        scheduled.append(name)
+        coro.close()
+
+    with patch.object(
+        config_entry,
+        "async_create_background_task",
+        side_effect=_fake_background_task,
+    ):
+        await coordinator.async_refresh_after_command()
+
+    assert len(scheduled) == 3
+
+
+@pytest.mark.asyncio
+async def test_delayed_refresh_requests_refresh(hass, config_entry):
+    """The delayed task should sleep then request a coordinator refresh."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+
     with (
         patch.object(
             coordinator, "async_request_refresh", new_callable=AsyncMock
         ) as mock_refresh,
-        patch.object(hass, "async_create_task") as mock_create_task,
+        patch(
+            "custom_components.ha_volkswagen.coordinator.asyncio.sleep",
+            new_callable=AsyncMock,
+        ) as mock_sleep,
     ):
-        await coordinator.async_refresh_after_command()
+        await coordinator._delayed_refresh(20)
 
-    mock_refresh.assert_called_once()
-    assert mock_create_task.call_count == 3
+    mock_sleep.assert_awaited_once_with(20)
+    mock_refresh.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------

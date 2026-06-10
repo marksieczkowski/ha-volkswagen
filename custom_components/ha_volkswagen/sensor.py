@@ -25,7 +25,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 
-from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 _IMPERIAL_UNIT_MAP: dict[str, str] = {
@@ -38,23 +37,12 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from carconnectivity.vehicle import GenericVehicle
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import VolkswagenDataUpdateCoordinator
+    from .coordinator import VolkswagenConfigEntry, VolkswagenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _safe_attr(vehicle: GenericVehicle, *attr_path: str) -> Any:
-    """Safely traverse attribute names, returning None if any are disabled/absent."""
-    obj = vehicle
-    for attr in attr_path:
-        obj = getattr(obj, attr, None)
-        if obj is None:
-            return None
-    return obj
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -165,7 +153,7 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
-        value_fn=lambda v: v.charging.rate.value if v.charging.rate.enabled else 0,
+        value_fn=lambda v: v.charging.rate.value if v.charging.rate.enabled else None,
         supported_fn=lambda v: isinstance(
             v, (VolkswagenNAElectricVehicle, VolkswagenNAHybridVehicle)
         ),
@@ -242,11 +230,11 @@ SENSOR_DESCRIPTIONS: tuple[VolkswagenSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkswagenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Volkswagen sensor entities."""
-    coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[VolkswagenSensor] = []
     for vehicle in coordinator.get_vehicles():
@@ -255,8 +243,11 @@ async def async_setup_entry(
                 if description.supported_fn(vehicle):
                     entities.append(VolkswagenSensor(coordinator, vehicle, description))
             except Exception:
-                _LOGGER.debug(
-                    "Skipping sensor %s for %s", description.key, vehicle.vin.value
+                _LOGGER.warning(
+                    "Skipping sensor %s for %s",
+                    description.key,
+                    vehicle.vin.value,
+                    exc_info=True,
                 )
 
     async_add_entities(entities)
