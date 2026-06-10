@@ -108,7 +108,9 @@ Done.
 
 ### Options
 
-After setup you can change the poll interval and the unit system (imperial/metric) at any time: go to "Settings" → "Devices & services" → "Volkswagen (North America)" and click "Configure". The Volkswagen API enforces a minimum poll interval of 180 seconds.
+After setup you can change the poll interval, the unit system (imperial/metric), and the S-PIN at any time: go to "Settings" → "Devices & services" → "Volkswagen (North America)" and click "Configure". The Volkswagen API enforces a minimum poll interval of 180 seconds.
+
+The S-PIN is the 4-digit security PIN from your MyVW app. Volkswagen requires it for privileged remote commands — lock/unlock and changing the climatization target temperature return a 403 error without it. If you skipped it during setup, add it here.
 
 ### Reauthentication
 

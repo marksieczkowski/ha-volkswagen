@@ -42,9 +42,11 @@
     "step": {
       "init": {
         "title": "Volkswagen options",
+        "description": "The S-PIN is the 4-digit security PIN from your MyVW app. It is required for privileged remote commands such as lock/unlock and changing climatization settings — without it those commands are rejected by Volkswagen.",
         "data": {
           "scan_interval": "Poll interval (seconds, minimum 180)",
-          "unit_system": "Unit system"
+          "unit_system": "Unit system",
+          "spin": "S-PIN (optional — required for some remote commands)"
         }
       }
     }
