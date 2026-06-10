@@ -20,18 +20,16 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 
-from .const import DOMAIN
 from .entity import VolkswagenBaseEntity
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from carconnectivity.vehicle import GenericVehicle
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-    from .coordinator import VolkswagenDataUpdateCoordinator
+    from .coordinator import VolkswagenConfigEntry, VolkswagenDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,10 +169,9 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
         translation_key="charging_connected",
         device_class=BinarySensorDeviceClass.PLUG,
         value_fn=lambda v: (
-            v.charging.connector.connection_state.enabled
-            and v.charging.connector.connection_state.value is not None
-            and v.charging.connector.connection_state.value.value.lower() == "connected"
+            v.charging.connector.connection_state.value.value.lower() == "connected"
             if v.charging.connector.connection_state.enabled
+            and v.charging.connector.connection_state.value is not None
             else None
         ),
         supported_fn=lambda v: isinstance(
@@ -214,11 +211,11 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[VolkswagenBinarySensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VolkswagenConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Volkswagen binary sensor entities."""
-    coordinator: VolkswagenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities: list[VolkswagenBinarySensor] = []
     for vehicle in coordinator.get_vehicles():
@@ -229,10 +226,11 @@ async def async_setup_entry(
                         VolkswagenBinarySensor(coordinator, vehicle, description)
                     )
             except Exception:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "Skipping binary sensor %s for %s",
                     description.key,
                     vehicle.vin.value,
+                    exc_info=True,
                 )
 
     async_add_entities(entities)
