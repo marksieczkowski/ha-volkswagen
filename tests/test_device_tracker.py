@@ -16,6 +16,7 @@ def _make_tracker(vehicle) -> VolkswagenDeviceTracker:
     tracker = VolkswagenDeviceTracker.__new__(VolkswagenDeviceTracker)
     tracker._vehicle = vehicle
     tracker.coordinator = coordinator
+    tracker._update_position()
     return tracker
 
 

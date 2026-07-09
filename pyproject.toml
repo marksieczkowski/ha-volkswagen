@@ -61,10 +61,10 @@ sort_by_size = true
 verbose = false
 
 [tool.pyright]
-venv_path = "."
+venvPath = "."
 venv = ".venv"
-python_version = "3.14"
-python_platform = "Darwin"
-type_checking_mode = "basic"
-report_missing_imports = true
-report_missing_type_stubs = false
+pythonVersion = "3.14"
+pythonPlatform = "Darwin"
+typeCheckingMode = "basic"
+reportMissingImports = true
+reportMissingTypeStubs = false
