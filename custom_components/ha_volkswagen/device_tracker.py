@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker.entity import TrackerEntity
+from homeassistant.core import callback
 
 from .entity import VolkswagenBaseEntity
 
@@ -37,7 +37,6 @@ async def async_setup_entry(
 class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
     """Device tracker for a Volkswagen vehicle's GPS position."""
 
-    _attr_source_type = SourceType.GPS
     _attr_icon = "mdi:car"
     # Override TrackerEntity's default entity_category of DIAGNOSTIC so the entity
     # appears in the main device controls rather than the diagnostics section.
@@ -52,26 +51,23 @@ class VolkswagenDeviceTracker(VolkswagenBaseEntity, TrackerEntity):
         super().__init__(coordinator, vehicle)
         self._attr_unique_id = f"{vehicle.vin.value}_position"
         self._attr_name = "Location"
+        self._update_position()
 
-    @property
-    def latitude(self) -> float | None:
-        """Return the latitude of the vehicle."""
-        pos = self._vehicle.position
-        if pos is None:
-            return None
-        if pos.latitude.enabled:
-            return pos.latitude.value
-        return None
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Refresh the tracked position when the coordinator updates."""
+        self._update_position()
+        super()._handle_coordinator_update()
 
-    @property
-    def longitude(self) -> float | None:
-        """Return the longitude of the vehicle."""
+    def _update_position(self) -> None:
+        """Copy the vehicle's GPS position into the tracker attributes."""
         pos = self._vehicle.position
-        if pos is None:
-            return None
-        if pos.longitude.enabled:
-            return pos.longitude.value
-        return None
+        self._attr_latitude = (
+            pos.latitude.value if pos is not None and pos.latitude.enabled else None
+        )
+        self._attr_longitude = (
+            pos.longitude.value if pos is not None and pos.longitude.enabled else None
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
