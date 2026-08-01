@@ -6,8 +6,9 @@ import asyncio
 import logging
 import os
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+import jwt
 from carconnectivity import carconnectivity as cc
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,6 +37,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+CONNECTOR_TYPE = "volkswagen_na"
+
 
 def build_carconnectivity_config(data: dict) -> dict:
     """Build the config dict expected by CarConnectivity from config entry data."""
@@ -53,7 +56,7 @@ def build_carconnectivity_config(data: dict) -> dict:
         "carConnectivity": {
             "connectors": [
                 {
-                    "type": "volkswagen_na",
+                    "type": CONNECTOR_TYPE,
                     "config": connector_config,
                 }
             ]
@@ -115,12 +118,92 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator["Garage"]):
 
         self.car_connectivity = await self.hass.async_add_executor_job(_startup_sync)
 
+    def _connector_registry(self) -> dict:
+        """Return the CarConnectivity connector registry, or {} if unavailable."""
+        connectors = getattr(self.car_connectivity, "connectors", None)
+        registry = getattr(connectors, "connectors", None)
+        return registry if isinstance(registry, dict) else {}
+
+    def _connector_session(self) -> Any | None:
+        """Return the VW connector's HTTP session, or None if unavailable."""
+        connector = self._connector_registry().get(CONNECTOR_TYPE)
+        return getattr(connector, "session", None)
+
+    def _persist_all(self) -> None:
+        """Persist connector sessions, then the tokenstore itself.
+
+        CarConnectivity.persist() only serialises its tokenstore dict to disk;
+        that dict is filled by each connector's persist() (which delegates to
+        SessionManager). Upstream chains the two inside shutdown(), which we
+        never call — so calling CarConnectivity.persist() alone always writes
+        an empty tokenstore, meaning the file never appears and every restart
+        performs a full login against a rate-limited endpoint.
+        """
+        for connector in self._connector_registry().values():
+            try:
+                connector.persist()
+            except Exception:
+                _LOGGER.debug("Could not persist connector session", exc_info=True)
+        self.car_connectivity.persist()
+
+    def _align_session_user_id(self) -> None:
+        """Point the connector session at the Car-Net account userId.
+
+        The connector takes session.user_id from the identity provider's login
+        redirect, which is the SSO id (the token's `ssoid` claim). VW's Car-Net
+        backend instead expects the account userId — the `sub` claim — in every
+        user-scoped path (/rrs/v1/privileges/user/..., /ss/v1/user/...) and in
+        the x-user-id header, and answers 403 USER_NOT_AUTHORIZED otherwise.
+        Only /account/v1/garage works with the wrong id, which is why login
+        looks healthy while every vehicle call fails.
+
+        Upstream bug, present in connector 0.1.24:
+        https://github.com/zackcornelius/CarConnectivity-connector-volkswagen-na/issues/83
+        The assignment is conditional, so it becomes a no-op once upstream
+        supplies the right id — safe to keep across connector upgrades.
+
+        Best effort by design: any failure here is logged and ignored, because
+        the fetch_all() that follows will surface the real error properly.
+        """
+        session = self._connector_session()
+        if session is None:
+            return
+
+        try:
+            token = session.token
+            # token is None before the first login, a dict afterwards; anything
+            # else means the session is not shaped as we expect, so leave it be.
+            if token is not None and not isinstance(token, dict):
+                return
+            if not token or not token.get("access_token"):
+                # Cold start with no tokenstore: fetch_all() would log in and
+                # immediately use the wrong id, so log in and realign first.
+                session.login()
+                token = session.token
+            if not isinstance(token, dict):
+                return
+            access_token = token.get("access_token")
+            if not access_token:
+                return
+            claims = jwt.decode(access_token, options={"verify_signature": False})
+        except Exception:
+            _LOGGER.debug("Could not realign VW session user id", exc_info=True)
+            return
+
+        sub = claims.get("sub")
+        if sub and session.user_id != sub:
+            _LOGGER.debug("Realigning VW session user id to the account userId")
+            session.user_id = sub
+
     def _fetch_all_sync(self) -> Garage:
         """Blocking fetch — runs in the executor thread."""
         if self.car_connectivity is None:
             raise UpdateFailed("CarConnectivity not initialised")
+        # Must run before every fetch: user_id lives in session.metadata and is
+        # reset by each full login, not just the first one.
+        self._align_session_user_id()
         self.car_connectivity.fetch_all()
-        self.car_connectivity.persist()
+        self._persist_all()
         garage = self.car_connectivity.get_garage()
         if garage is None:
             raise UpdateFailed("CarConnectivity returned no garage")
@@ -195,5 +278,5 @@ class VolkswagenDataUpdateCoordinator(DataUpdateCoordinator["Garage"]):
             # We never called startup() so we should not call shutdown() either
             # (it would try to join the non-existent background thread).
             # Persist tokens manually so the next startup can reuse them.
-            await self.hass.async_add_executor_job(self.car_connectivity.persist)
+            await self.hass.async_add_executor_job(self._persist_all)
             self.car_connectivity = None
