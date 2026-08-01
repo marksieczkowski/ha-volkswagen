@@ -23,6 +23,7 @@
         "Reauthenticate",
         "reauthentication",
         "Reauthentication",
+        "ssoid",
         "stdlib",
         "teardown",
         "tokenstore",

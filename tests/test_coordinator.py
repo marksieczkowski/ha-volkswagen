@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import jwt
 import pytest
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -294,3 +295,214 @@ async def test_shutdown_calls_car_connectivity_shutdown(
     mock_carconnectivity.persist.assert_called_once()
     mock_carconnectivity.shutdown.assert_not_called()
     assert coordinator.car_connectivity is None
+
+
+# ---------------------------------------------------------------------------
+# session user id realignment
+#
+# The connector sets session.user_id from the IDP login redirect (the SSO id),
+# but VW's Car-Net backend wants the account userId (the token's `sub`) on all
+# user-scoped paths. Without the realignment every vehicle call 403s.
+# ---------------------------------------------------------------------------
+
+SSO_ID = "7f23b448-fb3f-41a9-9e1b-a8c6d6277a06"
+ACCOUNT_USER_ID = "8a7beb0e-3e7f-4a33-ace1-b6ce4f4bb438"
+
+
+def _access_token(sub: str = ACCOUNT_USER_ID) -> str:
+    return jwt.encode({"sub": sub, "ssoid": SSO_ID}, "x" * 32, algorithm="HS256")
+
+
+def _attach_session(mock_carconnectivity, session) -> None:
+    """Wire a session into the mocked CarConnectivity connector registry."""
+    connector = MagicMock()
+    connector.session = session
+    mock_carconnectivity.connectors.connectors = {"volkswagen_na": connector}
+
+
+def _make_session(user_id: str = SSO_ID, token: dict | None = None) -> MagicMock:
+    session = MagicMock()
+    session.user_id = user_id
+    session.token = {"access_token": _access_token()} if token is None else token
+    return session
+
+
+@pytest.mark.asyncio
+async def test_fetch_realigns_user_id_to_account_id(
+    hass, mock_carconnectivity, config_entry
+):
+    """The SSO id must be replaced with the account userId before fetching."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+
+    session = _make_session()
+    _attach_session(mock_carconnectivity, session)
+
+    coordinator._fetch_all_sync()
+
+    assert session.user_id == ACCOUNT_USER_ID
+    session.login.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_realignment_is_noop_when_already_correct(
+    hass, mock_carconnectivity, config_entry
+):
+    """Once upstream supplies the right id the workaround must do nothing."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+
+    session = _make_session(user_id=ACCOUNT_USER_ID)
+    _attach_session(mock_carconnectivity, session)
+
+    coordinator._fetch_all_sync()
+
+    assert session.user_id == ACCOUNT_USER_ID
+
+
+@pytest.mark.asyncio
+async def test_realignment_logs_in_on_cold_start(
+    hass, mock_carconnectivity, config_entry
+):
+    """With no tokenstore, log in first so the very first fetch uses the right id."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+
+    session = _make_session(token={})
+
+    def _login():
+        session.token = {"access_token": _access_token()}
+
+    session.login.side_effect = _login
+    _attach_session(mock_carconnectivity, session)
+
+    coordinator._fetch_all_sync()
+
+    session.login.assert_called_once()
+    assert session.user_id == ACCOUNT_USER_ID
+
+
+@pytest.mark.asyncio
+async def test_realignment_failure_does_not_break_fetch(
+    hass, mock_carconnectivity, config_entry, mock_garage
+):
+    """A broken session must not stop polling — fetch_all still runs."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+    mock_carconnectivity.get_garage.return_value = mock_garage
+
+    session = _make_session(token={"access_token": "not-a-jwt"})
+    _attach_session(mock_carconnectivity, session)
+
+    assert coordinator._fetch_all_sync() is mock_garage
+    mock_carconnectivity.fetch_all.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_realignment_skipped_when_connector_missing(
+    hass, mock_carconnectivity, config_entry, mock_garage
+):
+    """An unrecognised connector registry must be tolerated, not crash."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+    mock_carconnectivity.get_garage.return_value = mock_garage
+    mock_carconnectivity.connectors.connectors = {}
+
+    assert coordinator._fetch_all_sync() is mock_garage
+
+
+@pytest.mark.asyncio
+async def test_realignment_handles_none_token_on_cold_start(
+    hass, mock_carconnectivity, config_entry
+):
+    """session.token is None (not {}) before the first login — must still realign."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+
+    session = _make_session(token=None)
+    session.token = None
+
+    def _login():
+        session.token = {"access_token": _access_token()}
+
+    session.login.side_effect = _login
+    _attach_session(mock_carconnectivity, session)
+
+    coordinator._fetch_all_sync()
+
+    session.login.assert_called_once()
+    assert session.user_id == ACCOUNT_USER_ID
+
+
+# ---------------------------------------------------------------------------
+# tokenstore persistence
+#
+# CarConnectivity.persist() only serialises its tokenstore dict; the connector's
+# persist() is what fills that dict. Without both, the tokenstore file is never
+# written and every restart does a full login.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_fetch_persists_connector_session_before_tokenstore(
+    hass, mock_carconnectivity, config_entry, mock_garage
+):
+    """Connector persist must run before the tokenstore is serialised."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+    mock_carconnectivity.get_garage.return_value = mock_garage
+
+    calls: list[str] = []
+    connector = MagicMock()
+    connector.session = _make_session()
+    connector.persist.side_effect = lambda: calls.append("connector")
+    mock_carconnectivity.persist.side_effect = lambda: calls.append("tokenstore")
+    mock_carconnectivity.connectors.connectors = {"volkswagen_na": connector}
+
+    coordinator._fetch_all_sync()
+
+    assert calls == ["connector", "tokenstore"]
+
+
+@pytest.mark.asyncio
+async def test_shutdown_persists_connector_session(
+    hass, mock_carconnectivity, config_entry
+):
+    """The same pairing must happen on unload, not just on fetch."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+
+    connector = MagicMock()
+    mock_carconnectivity.connectors.connectors = {"volkswagen_na": connector}
+
+    await coordinator.async_shutdown()
+
+    connector.persist.assert_called_once()
+    mock_carconnectivity.persist.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_connector_persist_failure_does_not_break_fetch(
+    hass, mock_carconnectivity, config_entry, mock_garage
+):
+    """A connector that cannot persist must not stop the tokenstore write."""
+    config_entry.add_to_hass(hass)
+    coordinator = VolkswagenDataUpdateCoordinator(hass, config_entry)
+    coordinator.car_connectivity = mock_carconnectivity
+    mock_carconnectivity.get_garage.return_value = mock_garage
+
+    connector = MagicMock()
+    connector.session = _make_session()
+    connector.persist.side_effect = OSError("disk full")
+    mock_carconnectivity.connectors.connectors = {"volkswagen_na": connector}
+
+    assert coordinator._fetch_all_sync() is mock_garage
+    mock_carconnectivity.persist.assert_called_once()
